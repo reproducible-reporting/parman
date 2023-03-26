@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=65.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "SweetFuture"
+version = "0.1.0"
+authors = [
+  { name="Toon Verstraelen", email="toon.verstraelen@ugent.be" },
+]
+description = "SweetFuture enables transparent parallelization"
+readme = "README.md"
+license = {file = "COPYING"}
+requires-python = ">=3.6"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Education",
+    "License :: OSI Approved :: License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)",
+    "Natural Language :: English",
+    "Programming Language :: Python :: 3",
+]
+dependencies = ["attrs", "cattrs", "pytest"]
+
+[project.urls]
+Issues = "https://github.com/reproducible-reporting/sweetfuture/issues"
+Source = "https://github.com/reproducible-reporting/sweetfuture/"
+Changelog = "https://github.com/reproducible-reporting/sweetfuture/blob/main/CHANGELOG.md"
