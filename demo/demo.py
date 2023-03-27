@@ -13,7 +13,7 @@ from sweetfuture.runners.serial import SerialRunner
 # from concurrent.futures import ThreadPoolExecutor
 
 
-FRAMEWOWRK = "concurrent"
+FRAMEWOWRK = "parsl-slurm"
 BOOT_SIZE = 50
 SAMPLE_SIZE = 50
 COMMITTEE_SIZE = 10
@@ -65,11 +65,34 @@ def main():
         config = parsl.config.Config(
             executors=[
                 parsl.executors.HighThroughputExecutor(
-                    label="htex_Local",
+                    label="htex_local",
                     provider=parsl.providers.LocalProvider(
                         channel=parsl.channels.LocalChannel(),
                         init_blocks=1,
                         max_blocks=1,
+                    ),
+                )
+            ],
+            strategy="none",
+        )
+        runner = ParslRunner(Clerk(), parsl.load(config))
+    elif FRAMEWOWRK == "parsl-slurm":
+        config = parsl.config.Config(
+            executors=[
+                parsl.executors.HighThroughputExecutor(
+                    label="htex_slaking",
+                    address=parsl.addresses.address_by_hostname(),
+                    max_workers=1,  # cores per job
+                    provider=parsl.providers.SlurmProvider(
+                        channel=parsl.channels.LocalChannel(),
+                        init_blocks=2, # number of jobs submitted
+                        max_blocks=2,
+                        nodes_per_block=1, # number of nodes per job
+                        # cores_per_node=4,
+                        scheduler_options=" --cpus-per-task=4", # 4-core jobs, tricky
+                        partition="slaking",
+                        launcher=parsl.launchers.SrunLauncher(),
+                        worker_init="micromamba activate debug",
                     ),
                 )
             ],
