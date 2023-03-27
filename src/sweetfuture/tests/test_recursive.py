@@ -21,7 +21,7 @@
 
 import pytest
 
-from ..recursive import recursive_get, recursive_iterate, recursive_set, recursive_transform, same
+from ..recursive import recursive_get, recursive_iterate, recursive_transform, same
 
 
 @pytest.mark.parametrize(
@@ -41,33 +41,6 @@ from ..recursive import recursive_get, recursive_iterate, recursive_set, recursi
 )
 def test_recursive_get(tree, mulidx, value):
     assert recursive_get(tree, mulidx) == value
-
-
-@pytest.mark.parametrize(
-    "intree, mulidx, value, outtree",
-    [
-        ("aaa", (), "bbb", "bbb"),
-        ([3, 4], (), "bbb", "bbb"),
-        (1, (), 2, 2),
-        (None, (), 2, 2),
-        ({}, (), [2, 4], [2, 4]),
-        ([1, 2], (0,), 3, [3, 2]),
-        ([1, 2, 5], (2,), 4, [1, 2, 4]),
-        ([1, 2, 5], (2,), 4, [1, 2, 4]),
-        ([1, {2: "a", "b": 3}, 5], (1, "b"), "foo", [1, {2: "a", "b": "foo"}, 5]),
-        ({2: "a", "b": 3}, ("b",), "foo", {2: "a", "b": "foo"}),
-        (
-            {2: "a", "b": [[1, {2.0: "c"}]]},
-            ("b", 0, 1, 2.0),
-            "foo",
-            {2: "a", "b": [[1, {2.0: "foo"}]]},
-        ),
-    ],
-)
-def test_recursive_set(intree, mulidx, value, outtree):
-    assert recursive_set(intree, mulidx, value) == outtree
-    if len(mulidx) > 0:
-        assert intree == outtree
 
 
 @pytest.mark.parametrize(

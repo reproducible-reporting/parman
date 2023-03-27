@@ -23,7 +23,7 @@ The functions below facilitate operations on nested lists + dicts + other types.
 """
 
 
-__all__ = ("recursive_get", "recursive_set", "recursive_iterate", "recursive_transform", "same")
+__all__ = ("recursive_get", "recursive_iterate", "recursive_transform", "same")
 
 
 def recursive_get(tree, mulidx: tuple):
@@ -31,30 +31,6 @@ def recursive_get(tree, mulidx: tuple):
         return tree
     elif len(mulidx) > 0:
         return recursive_get(tree[mulidx[0]], mulidx[1:])
-
-
-def recursive_set(tree, mulidx: tuple, value):
-    # TODO: REMOVE THIS, too fragile and not needed anymore.
-    if len(mulidx) == 0:
-        return value
-    idx = mulidx[0]
-    subidx = mulidx[1:]
-    if isinstance(idx, int):
-        if idx < 0:
-            raise ValueError("Negative list indexes are not supported in recursive_set")
-        if tree is None:
-            tree = [None] * (idx + 1)
-        else:
-            assert isinstance(tree, list)
-            if len(tree) <= idx:
-                tree.extend([None] * (len(tree) - idx + 1))
-    else:
-        if tree is None:
-            tree = {}
-        else:
-            assert isinstance(tree, dict)
-    tree[idx] = recursive_set(tree[idx], subidx, value)
-    return tree
 
 
 def same(items):
