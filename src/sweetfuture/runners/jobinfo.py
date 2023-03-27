@@ -17,6 +17,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
+"""Tools for interfacing job scripts (or templates) to Python functions."""
 
 
 import importlib.util

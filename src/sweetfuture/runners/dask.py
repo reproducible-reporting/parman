@@ -17,7 +17,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-"""Dask job runner"""
+"""Dask job runner, wrapper for Dask futures."""
 
 import attrs
 from dask.distributed import Client, Future

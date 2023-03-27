@@ -17,7 +17,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-"""Parsl job runner"""
+"""Parsl job runner, wraps around Parsl AppFuture."""
 
 import attrs
 from parsl.dataflow.dflow import DataFlowKernelLoader

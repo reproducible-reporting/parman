@@ -17,40 +17,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-"""Serial job runner
-
-Required framework features:
-
-- Easy switching between local and remote execution
-- Integration with slurm
-- Local multiprocessing
-- File-based futures (wait for files to be computed, downloaded, etc.)
-- Minimal software dependencies (for jobs): something to read json
-- Minimal bloat: no crazy databases and heavy servers
-- General purpose: not restricted to a specific application
-
-
-Frameworks to consider:
-
-- Suitable candidates:
-    - No framework: simple serial implementation for API definition and debugging.
-    - Built-in module of Python: concurrent.futures.ProcessPoolExecutor
-    - Parsl: https://github.com/Parsl/parsl
-- See: https://github.com/meirwah/awesome-workflow-engines
-  See: https://workflows.community/
-  Many solutions but few interesting ones.
-  Main weaknesses of other libraries:
-    - Domain specific (language).
-    - Bloat: trying to solve all problems (servers, databases, web interfaces, ...).
-    - Assumptions on workflow structure.
-    - Assumptions on hardware.
-    - Not Python.
-    - Too invasive API.
-  Coming close:
-    - Dask
-    - AiiDA
-
-"""
+"""Serial job runner, mainly useful for debugging, not using any Future instances."""
 
 import attrs
 

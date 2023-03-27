@@ -17,3 +17,4 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
+"""Mapping between local job files and global storage layout."""

@@ -17,6 +17,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
+"""Dry runner, for testing the workflow API."""
 
 
 import attrs

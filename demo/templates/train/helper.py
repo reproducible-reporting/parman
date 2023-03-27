@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""Example of a helper script for the train job."""
 
 import json
 import time

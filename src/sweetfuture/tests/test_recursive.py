@@ -17,6 +17,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
+"""Unit tests for sweetfuture.recursive."""
 
 
 import pytest

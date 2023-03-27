@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Minimalistic SWAT demo."""
+"""Minimalistic SweetFuture demo."""
 
 import parsl
 
@@ -85,11 +85,11 @@ def main():
                     max_workers=1,  # cores per job
                     provider=parsl.providers.SlurmProvider(
                         channel=parsl.channels.LocalChannel(),
-                        init_blocks=2, # number of jobs submitted
+                        init_blocks=2,  # number of jobs submitted
                         max_blocks=2,
-                        nodes_per_block=1, # number of nodes per job
+                        nodes_per_block=1,  # number of nodes per job
                         # cores_per_node=4,
-                        scheduler_options=" --cpus-per-task=4", # 4-core jobs, tricky
+                        scheduler_options=" --cpus-per-task=4",  # 4-core jobs, tricky
                         partition="slaking",
                         launcher=parsl.launchers.SrunLauncher(),
                         worker_init="micromamba activate debug",

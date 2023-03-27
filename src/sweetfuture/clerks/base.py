@@ -17,7 +17,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-"""Base class for clerks"""
+"""Base class for mapping between local and global file structure."""
 
 import os
 

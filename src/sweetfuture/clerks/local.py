@@ -17,7 +17,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-"""Local file no-op storage for in-place computation."""
+"""Local to global mapping for in-tree calculations."""
 
 import json
 import os
