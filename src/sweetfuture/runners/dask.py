@@ -23,6 +23,7 @@ import attrs
 from dask.distributed import Client, Future
 
 from ..clerks.base import ClerkBase
+from ..clerks.local import LocalClerk
 from ..recursive import recursive_get, recursive_transform
 from .base import RunnerBase
 from .concurrent import FutureResult, validating_wrapper
@@ -35,7 +36,7 @@ __all__ = ("DaskRunner",)
 class DaskRunner(RunnerBase):
     """Run jobs asynchronously with ProcessPoolExecutor"""
 
-    clerk: ClerkBase = attrs.field()
+    clerk: ClerkBase = attrs.field(default=attrs.Factory(LocalClerk))
     client = attrs.field(default=None)
 
     def __attrs_post_init__(self):

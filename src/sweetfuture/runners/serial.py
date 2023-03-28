@@ -22,6 +22,7 @@
 import attrs
 
 from ..clerks.base import ClerkBase
+from ..clerks.local import LocalClerk
 from .base import RunnerBase
 from .jobinfo import validate
 
@@ -32,7 +33,7 @@ __all__ = "SerialRunner"
 class SerialRunner(RunnerBase):
     """Just execute everything right away."""
 
-    clerk: ClerkBase = attrs.field()
+    clerk: ClerkBase = attrs.field(default=attrs.Factory(LocalClerk))
 
     def call(self, func, kwargs, kwargs_api, result_api, resources):
         validate("kwarg", kwargs, kwargs_api)

@@ -24,6 +24,7 @@ from parsl.dataflow.dflow import DataFlowKernelLoader
 from parsl.dataflow.futures import AppFuture
 
 from ..clerks.base import ClerkBase
+from ..clerks.local import LocalClerk
 from ..recursive import recursive_get, recursive_transform
 from .base import RunnerBase
 from .concurrent import FutureResult, validating_wrapper
@@ -36,7 +37,7 @@ __all__ = ("ParslRunner",)
 class ParslRunner(RunnerBase):
     """Run jobs asynchronously with Parsl"""
 
-    clerk: ClerkBase = attrs.field()
+    clerk: ClerkBase = attrs.field(default=attrs.Factory(LocalClerk))
     dfk: DataFlowKernelLoader = attrs.field(default=None)
 
     def __attrs_post_init__(self):

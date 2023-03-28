@@ -24,6 +24,7 @@ from concurrent.futures import ProcessPoolExecutor
 import attrs
 
 from ..clerks.base import ClerkBase
+from ..clerks.local import LocalClerk
 from ..recursive import recursive_get, recursive_transform
 from .base import RunnerBase
 from .jobinfo import validate
@@ -35,7 +36,7 @@ __all__ = ("ConcurrentRunner", "validating_wrapper", "FutureResult")
 class ConcurrentRunner(RunnerBase):
     """Run jobs asynchronously with an Executor"""
 
-    clerk: ClerkBase = attrs.field()
+    clerk: ClerkBase = attrs.field(default=attrs.Factory(LocalClerk))
     executor = attrs.field(default=None)
 
     def __attrs_post_init__(self):
