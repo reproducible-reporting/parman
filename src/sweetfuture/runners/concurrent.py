@@ -28,7 +28,7 @@ from ..recursive import recursive_get, recursive_transform
 from .base import RunnerBase
 from .jobinfo import validate
 
-__all__ = ("ConcurrentRunner", "validating_wrapper")
+__all__ = ("ConcurrentRunner", "validating_wrapper", "FutureResult")
 
 
 @attrs.define

@@ -25,7 +25,7 @@ from dask.distributed import Client, Future
 from ..clerks.base import ClerkBase
 from ..recursive import recursive_get, recursive_transform
 from .base import RunnerBase
-from .concurrent import validating_wrapper
+from .concurrent import FutureResult, validating_wrapper
 from .jobinfo import validate
 
 __all__ = ("DaskRunner",)
@@ -44,26 +44,17 @@ class DaskRunner(RunnerBase):
 
     def call(self, func, kwargs, kwargs_api, result_api, resources):
         kwargs = recursive_transform(
-            lambda _, field: field.result() if isinstance(field, DaskFutureResult) else field,
+            lambda _, field: field.result() if isinstance(field, FutureResult) else field,
             kwargs,
         )
         validate("kwarg", kwargs, kwargs_api)
         submit_kwargs = resources.get("dask_submit_kwargs", {})
         future = self.client.submit(validating_wrapper, func, kwargs, result_api, **submit_kwargs)
         return recursive_transform(
-            lambda mulidx, field: DaskFutureResult(future, mulidx),
+            lambda mulidx, field: FutureResult(future, mulidx),
             result_api,
         )
 
     def wait(self):
         """Wait until all jobs have completed."""
         self.client.shutdown()
-
-
-@attrs.define
-class DaskFutureResult:
-    future: Future = attrs.field()
-    mulidx: tuple = attrs.field()
-
-    def result(self):
-        return recursive_get(self.future.result(), self.mulidx)

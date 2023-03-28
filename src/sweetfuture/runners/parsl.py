@@ -26,7 +26,7 @@ from parsl.dataflow.futures import AppFuture
 from ..clerks.base import ClerkBase
 from ..recursive import recursive_get, recursive_transform
 from .base import RunnerBase
-from .concurrent import validating_wrapper
+from .concurrent import FutureResult, validating_wrapper
 from .jobinfo import validate
 
 __all__ = ("ParslRunner",)
@@ -45,7 +45,7 @@ class ParslRunner(RunnerBase):
 
     def call(self, func, kwargs, kwargs_api, result_api, resources):
         kwargs = recursive_transform(
-            lambda _, field: field.result() if isinstance(field, ParslFutureResult) else field,
+            lambda _, field: field.result() if isinstance(field, FutureResult) else field,
             kwargs,
         )
         validate("kwarg", kwargs, kwargs_api)
@@ -55,19 +55,10 @@ class ParslRunner(RunnerBase):
             executors=resources.get("parsl_executors", "all"),
         )
         return recursive_transform(
-            lambda mulidx, field: ParslFutureResult(future, mulidx),
+            lambda mulidx, field: FutureResult(future, mulidx),
             result_api,
         )
 
     def wait(self):
         """Wait until all jobs have completed."""
         self.dfk.wait_for_current_tasks()
-
-
-@attrs.define
-class ParslFutureResult:
-    future: AppFuture = attrs.field()
-    mulidx: tuple = attrs.field()
-
-    def result(self):
-        return recursive_get(self.future.result(), self.mulidx)
