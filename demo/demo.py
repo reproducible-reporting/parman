@@ -13,7 +13,7 @@ from sweetfuture.runners.serial import SerialRunner
 # from concurrent.futures import ThreadPoolExecutor
 
 
-FRAMEWOWRK = "parsl-slurm"
+FRAMEWOWRK = "parsl-local"
 BOOT_SIZE = 50
 SAMPLE_SIZE = 50
 COMMITTEE_SIZE = 10

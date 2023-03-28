@@ -33,11 +33,7 @@ from .base import ClerkBase
 __all__ = ("Clerk",)
 
 
-# Frozen is used to make the objects immutable,
-# which is needed for Parsl's HTEX.
-
-
-@attrs.frozen
+@attrs.define
 class Clerk(ClerkBase):
     work: str = attrs.field(default="work")
 

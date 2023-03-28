@@ -28,11 +28,7 @@ from ..runners.jobinfo import JobInfo
 __all__ = "ClerkBase"
 
 
-# Frozen is used to make the objects immutable,
-# which is needed for Parsl's HTEX.
-
-
-@attrs.frozen
+@attrs.define
 class ClerkBase:
     def jobdir(self, locator: str):
         raise NotImplementedError
