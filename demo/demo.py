@@ -3,7 +3,7 @@
 
 import parsl
 
-from sweetfuture.clerks.local import Clerk
+from sweetfuture.clerks.local import LocalClerk
 from sweetfuture.runners.concurrent import ConcurrentRunner
 from sweetfuture.runners.dask import DaskRunner
 from sweetfuture.runners.dry import DryRunner
@@ -13,7 +13,7 @@ from sweetfuture.runners.serial import SerialRunner
 # from concurrent.futures import ThreadPoolExecutor
 
 
-FRAMEWOWRK = "parsl-local"
+FRAMEWOWRK = "concurrent"
 BOOT_SIZE = 50
 SAMPLE_SIZE = 50
 COMMITTEE_SIZE = 10
@@ -57,9 +57,9 @@ def main():
     if FRAMEWOWRK == "dry":
         runner = DryRunner()
     elif FRAMEWOWRK == "serial":
-        runner = SerialRunner(Clerk())
+        runner = SerialRunner(LocalClerk())
     elif FRAMEWOWRK == "concurrent":
-        runner = ConcurrentRunner(Clerk())
+        runner = ConcurrentRunner(LocalClerk())
         # runner = ConcurrentRunner(Clerk(), ThreadPoolExecutor(max_workers=8))
     elif FRAMEWOWRK == "parsl-local":
         config = parsl.config.Config(
@@ -75,7 +75,7 @@ def main():
             ],
             strategy="none",
         )
-        runner = ParslRunner(Clerk(), parsl.load(config))
+        runner = ParslRunner(LocalClerk(), parsl.load(config))
     elif FRAMEWOWRK == "parsl-slurm":
         config = parsl.config.Config(
             executors=[
@@ -98,9 +98,9 @@ def main():
             ],
             strategy="none",
         )
-        runner = ParslRunner(Clerk(), parsl.load(config))
+        runner = ParslRunner(LocalClerk(), parsl.load(config))
     elif FRAMEWOWRK == "dask":
-        runner = DaskRunner(Clerk())
+        runner = DaskRunner(LocalClerk())
     else:
         raise ValueError("invalid framework")
 

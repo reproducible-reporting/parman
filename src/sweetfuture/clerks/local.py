@@ -30,11 +30,11 @@ from ..recursive import recursive_transform
 from ..runners.jobinfo import structure, unstructure
 from .base import ClerkBase
 
-__all__ = ("Clerk",)
+__all__ = ("LocalClerk",)
 
 
 @attrs.define
-class Clerk(ClerkBase):
+class LocalClerk(ClerkBase):
     work: str = attrs.field(default="work")
 
     @contextmanager
