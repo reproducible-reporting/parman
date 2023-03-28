@@ -19,28 +19,22 @@
 # --
 """Base class for mapping between local and global file structure."""
 
-import os
+from contextlib import contextmanager
+from typing import Any
 
 import attrs
 
-from ..runners.jobinfo import JobInfo
-
-__all__ = "ClerkBase"
+__all__ = ("ClerkBase",)
 
 
 @attrs.define
 class ClerkBase:
-    def jobdir(self, locator: str):
+    @contextmanager
+    def workdir(self, locator: str):
         raise NotImplementedError
 
-    def write_json_kwargs(self, kwargs: dict, jobdir: str, locator: str):
+    def localize(self, data: Any, jobdir: str, locator: str) -> Any:
         raise NotImplementedError
 
-    def has_result(self, jobdir: str) -> bool:
-        raise NotImplementedError
-
-    def fetch_result(self, locator: str, result_api: dict):
-        raise NotImplementedError
-
-    def load_json_result(self, jobdir: str, locator: str, result_api: dict):
+    def globalize(self, data: Any, jobdir: str, locator: str) -> Any:
         raise NotImplementedError

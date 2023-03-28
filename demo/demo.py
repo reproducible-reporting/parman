@@ -3,6 +3,7 @@
 
 import parsl
 
+from sweetfuture.job import job
 from sweetfuture.runners.concurrent import ConcurrentRunner
 from sweetfuture.runners.dask import DaskRunner
 from sweetfuture.runners.dry import DryRunner
@@ -12,7 +13,7 @@ from sweetfuture.runners.serial import SerialRunner
 # from concurrent.futures import ThreadPoolExecutor
 
 
-FRAMEWOWRK = "concurrent"
+FRAMEWORK = "concurrent"
 BOOT_SIZE = 50
 SAMPLE_SIZE = 50
 COMMITTEE_SIZE = 10
@@ -25,12 +26,14 @@ def sample(runner, igen, models):
     configs = []
     for temperature in TEMPERATURES:
         configs.extend(
-            runner.job(
-                "templates/sample",
-                f"g{igen:02d}/sample/{temperature:04.0f}",
-                sample_size=SAMPLE_SIZE,
-                temperature=temperature,
-                models=models,
+            runner(
+                job(
+                    "templates/sample",
+                    f"g{igen:02d}/sample/{temperature:04.0f}",
+                    sample_size=SAMPLE_SIZE,
+                    temperature=temperature,
+                    models=models,
+                )
             )
         )
     return configs
@@ -39,28 +42,30 @@ def sample(runner, igen, models):
 def compute(runner, igen, configs):
     """Compute reference data for the configurations from the current iteration."""
     for iconfig, config in enumerate(configs):
-        yield runner.job("templates/compute", f"g{igen:02d}/compute/{iconfig:04d}", config=config)
+        yield runner(job("templates/compute", f"g{igen:02d}/compute/{iconfig:04d}", config=config))
 
 
 def train(runner, igen, examples):
     """Use all training data collected so far to improve the model."""
     return [
-        runner.job(
-            "templates/train", f"g{igen:02d}/train/{imodel:02d}", seed=imodel, examples=examples
+        runner(
+            job(
+                "templates/train", f"g{igen:02d}/train/{imodel:02d}", seed=imodel, examples=examples
+            )
         )
         for imodel in range(COMMITTEE_SIZE)
     ]
 
 
 def main():
-    if FRAMEWOWRK == "dry":
+    if FRAMEWORK == "dry":
         runner = DryRunner()
-    elif FRAMEWOWRK == "serial":
+    elif FRAMEWORK == "serial":
         runner = SerialRunner()
-    elif FRAMEWOWRK == "concurrent":
+    elif FRAMEWORK == "concurrent":
         runner = ConcurrentRunner()
         # runner = ConcurrentRunner(Clerk(), ThreadPoolExecutor(max_workers=8))
-    elif FRAMEWOWRK == "parsl-local":
+    elif FRAMEWORK == "parsl-local":
         config = parsl.config.Config(
             executors=[
                 parsl.executors.HighThroughputExecutor(
@@ -75,20 +80,21 @@ def main():
             strategy="none",
         )
         runner = ParslRunner(dfk=parsl.load(config))
-    elif FRAMEWOWRK == "parsl-slurm":
+    elif FRAMEWORK == "parsl-slurm":
         config = parsl.config.Config(
             executors=[
                 parsl.executors.HighThroughputExecutor(
                     label="htex_slaking",
                     address=parsl.addresses.address_by_hostname(),
-                    max_workers=1,  # cores per job
+                    max_workers=4,  # parallel tasks per block
                     provider=parsl.providers.SlurmProvider(
+                        # A "block" is a single slurm job.
                         channel=parsl.channels.LocalChannel(),
-                        init_blocks=2,  # number of jobs submitted
+                        init_blocks=2,
                         max_blocks=2,
-                        nodes_per_block=1,  # number of nodes per job
-                        # cores_per_node=4,
-                        scheduler_options=" --cpus-per-task=4",  # 4-core jobs, tricky
+                        nodes_per_block=1,
+                        cores_per_node=4,
+                        scheduler_options=" --cluster=slaking",
                         partition="slaking",
                         launcher=parsl.launchers.SrunLauncher(),
                         worker_init="micromamba activate debug",
@@ -98,13 +104,13 @@ def main():
             strategy="none",
         )
         runner = ParslRunner(dfk=parsl.load(config))
-    elif FRAMEWOWRK == "dask":
+    elif FRAMEWORK == "dask":
         runner = DaskRunner()
     else:
         raise ValueError("invalid framework")
 
     examples = []
-    configs = runner.job("templates/boot", "g00/boot", boot_size=BOOT_SIZE)
+    configs = runner(job("templates/boot", "g00/boot", boot_size=BOOT_SIZE))
     examples.extend(compute(runner, 0, configs))
     models = train(runner, 0, examples)
     for igen in range(1, NUM_GENERATIONS):

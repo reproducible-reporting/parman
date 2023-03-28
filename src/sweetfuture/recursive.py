@@ -29,8 +29,9 @@ __all__ = ("recursive_get", "recursive_iterate", "recursive_transform", "same")
 def recursive_get(tree, mulidx: tuple):
     if len(mulidx) == 0:
         return tree
-    elif len(mulidx) > 0:
+    if len(mulidx) > 0:
         return recursive_get(tree[mulidx[0]], mulidx[1:])
+    return None
 
 
 def same(items):
@@ -67,7 +68,7 @@ def recursive_transform(transform, *trees, mulidx=()):
             for intidx, items in enumerate(zip(*trees)):
                 result.append(recursive_transform(transform, *items, mulidx=mulidx + (intidx,)))
             return result
-        elif isinstance(trees[0], dict) and same(set(tree.keys()) for tree in trees):
+        if isinstance(trees[0], dict) and same(set(tree.keys()) for tree in trees):
             result = {}
             for keyidx in trees[0].keys():
                 items = [tree[keyidx] for tree in trees]

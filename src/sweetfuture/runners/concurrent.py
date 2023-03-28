@@ -23,56 +23,25 @@ from concurrent.futures import ProcessPoolExecutor
 
 import attrs
 
-from ..clerks.base import ClerkBase
-from ..clerks.local import LocalClerk
-from ..recursive import recursive_get, recursive_transform
-from .base import RunnerBase
-from .jobinfo import validate
+from ..closure import Closure
+from .future import FutureRunnerBase
 
-__all__ = ("ConcurrentRunner", "validating_wrapper", "FutureResult")
+__all__ = ("ConcurrentRunner",)
 
 
 @attrs.define
-class ConcurrentRunner(RunnerBase):
+class ConcurrentRunner(FutureRunnerBase):
     """Run jobs asynchronously with an Executor"""
 
-    clerk: ClerkBase = attrs.field(default=attrs.Factory(LocalClerk))
     executor = attrs.field(default=None)
 
     def __attrs_post_init__(self):
         if self.executor is None:
             self.executor = ProcessPoolExecutor()
 
-    def call(self, func, kwargs, kwargs_api, result_api, resources):
-        kwargs = recursive_transform(
-            lambda _, field: field.result() if isinstance(field, FutureResult) else field,
-            kwargs,
-        )
-        validate("kwarg", kwargs, kwargs_api)
-        future = self.executor.submit(validating_wrapper, func, kwargs, result_api)
-        return recursive_transform(
-            lambda mulidx, field: FutureResult(
-                future,
-                mulidx,
-            ),
-            result_api,
-        )
+    def _submit(self, closure: Closure):
+        return self.executor.submit(Closure.validated_call, closure)
 
     def wait(self):
         """Wait until all jobs have completed."""
         self.executor.shutdown()
-
-
-def validating_wrapper(func, kwargs, result_api):
-    result = func(**kwargs)
-    validate("result", result, result_api)
-    return result
-
-
-@attrs.define
-class FutureResult:
-    future = attrs.field()
-    mulidx: tuple = attrs.field()
-
-    def result(self):
-        return recursive_get(self.future.result(), self.mulidx)

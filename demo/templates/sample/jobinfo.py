@@ -3,15 +3,11 @@
 from pathlib import Path
 
 
-def get_kwargs_api():
-    return {"models": list[Path], "temperature": int, "sample_size": int}
-
-
-def get_result_api(kwargs):
-    return [Path] * kwargs["sample_size"]
+def get_result_mock(models: list[Path], temperature: int, sample_size: int):
+    return [Path(f"__boot_sample_{i}__") for i in range(sample_size)]
 
 
 resources = {
-    "parsel_executors": "all",
+    "parsl_executors": "all",
     "dask_submit_kwargs": {},
 }

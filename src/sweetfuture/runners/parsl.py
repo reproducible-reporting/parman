@@ -21,44 +21,26 @@
 
 import attrs
 from parsl.dataflow.dflow import DataFlowKernelLoader
-from parsl.dataflow.futures import AppFuture
 
-from ..clerks.base import ClerkBase
-from ..clerks.local import LocalClerk
-from ..recursive import recursive_get, recursive_transform
-from .base import RunnerBase
-from .concurrent import FutureResult, validating_wrapper
-from .jobinfo import validate
+from ..closure import Closure
+from .future import FutureRunnerBase
 
 __all__ = ("ParslRunner",)
 
 
 @attrs.define
-class ParslRunner(RunnerBase):
+class ParslRunner(FutureRunnerBase):
     """Run jobs asynchronously with Parsl"""
 
-    clerk: ClerkBase = attrs.field(default=attrs.Factory(LocalClerk))
     dfk: DataFlowKernelLoader = attrs.field(default=None)
 
     def __attrs_post_init__(self):
         if self.dfk is None:
             self.dfk = DataFlowKernelLoader.load()
 
-    def call(self, func, kwargs, kwargs_api, result_api, resources):
-        kwargs = recursive_transform(
-            lambda _, field: field.result() if isinstance(field, FutureResult) else field,
-            kwargs,
-        )
-        validate("kwarg", kwargs, kwargs_api)
-        future = self.dfk.submit(
-            validating_wrapper,
-            [func, kwargs, result_api],
-            executors=resources.get("parsl_executors", "all"),
-        )
-        return recursive_transform(
-            lambda mulidx, field: FutureResult(future, mulidx),
-            result_api,
-        )
+    def _submit(self, closure: Closure):
+        executors = closure.get_resources().get("parsl_executors", "all")
+        return self.dfk.submit(Closure.validated_call, [closure], executors)
 
     def wait(self):
         """Wait until all jobs have completed."""

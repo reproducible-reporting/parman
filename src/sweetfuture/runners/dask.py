@@ -20,41 +20,27 @@
 """Dask job runner, wrapper for Dask futures."""
 
 import attrs
-from dask.distributed import Client, Future
+from dask.distributed import Client
 
-from ..clerks.base import ClerkBase
-from ..clerks.local import LocalClerk
-from ..recursive import recursive_get, recursive_transform
-from .base import RunnerBase
-from .concurrent import FutureResult, validating_wrapper
-from .jobinfo import validate
+from ..closure import Closure
+from .future import FutureRunnerBase
 
 __all__ = ("DaskRunner",)
 
 
 @attrs.define
-class DaskRunner(RunnerBase):
+class DaskRunner(FutureRunnerBase):
     """Run jobs asynchronously with ProcessPoolExecutor"""
 
-    clerk: ClerkBase = attrs.field(default=attrs.Factory(LocalClerk))
     client = attrs.field(default=None)
 
     def __attrs_post_init__(self):
         if self.client is None:
             self.client = Client()
 
-    def call(self, func, kwargs, kwargs_api, result_api, resources):
-        kwargs = recursive_transform(
-            lambda _, field: field.result() if isinstance(field, FutureResult) else field,
-            kwargs,
-        )
-        validate("kwarg", kwargs, kwargs_api)
-        submit_kwargs = resources.get("dask_submit_kwargs", {})
-        future = self.client.submit(validating_wrapper, func, kwargs, result_api, **submit_kwargs)
-        return recursive_transform(
-            lambda mulidx, field: FutureResult(future, mulidx),
-            result_api,
-        )
+    def _submit(self, closure: Closure):
+        submit_kwargs = closure.get_resources().get("dask_submit_kwargs", {})
+        return self.client.submit(Closure.validated_call, closure, **submit_kwargs)
 
     def wait(self):
         """Wait until all jobs have completed."""

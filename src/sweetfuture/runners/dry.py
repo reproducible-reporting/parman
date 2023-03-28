@@ -19,11 +19,12 @@
 # --
 """Dry runner, for testing the workflow API."""
 
+from typing import Any
 
 import attrs
 
+from ..closure import Closure
 from .base import RunnerBase
-from .jobinfo import JobInfo, make_example, validate
 
 __all__ = ("DryRunner",)
 
@@ -32,13 +33,6 @@ __all__ = ("DryRunner",)
 class DryRunner(RunnerBase):
     """Just check inputs and generate example outputs."""
 
-    def job(self, template: str, locator: str, **kwargs):
-        jobinfo = JobInfo.from_template(template)
-        kwargs_api, result_api = jobinfo.get_apis(kwargs)
-        return self.call(None, kwargs, kwargs_api, result_api)
-
-    def call(self, _, kwargs, kwargs_api, result_api):
-        validate("kwargs", kwargs, kwargs_api)
-        result = make_example(result_api)
-        validate("result", result, result_api)
-        return result
+    def __call__(self, closure: Closure) -> Any:
+        closure.validate_parameters()
+        return closure.get_result_mock()

@@ -19,24 +19,19 @@
 # --
 """Serial job runner, mainly useful for debugging, not using any Future instances."""
 
+from typing import Any
+
 import attrs
 
-from ..clerks.base import ClerkBase
-from ..clerks.local import LocalClerk
+from ..closure import Closure
 from .base import RunnerBase
-from .jobinfo import validate
 
-__all__ = "SerialRunner"
+__all__ = ("SerialRunner",)
 
 
 @attrs.define
 class SerialRunner(RunnerBase):
     """Just execute everything right away."""
 
-    clerk: ClerkBase = attrs.field(default=attrs.Factory(LocalClerk))
-
-    def call(self, func, kwargs, kwargs_api, result_api, resources):
-        validate("kwarg", kwargs, kwargs_api)
-        result = func(**kwargs)
-        validate("result", result, result_api)
-        return result
+    def __call__(self, closure: Closure) -> Any:
+        return closure.validated_call()
