@@ -40,8 +40,11 @@ class FutureRunnerBase(RunnerBase):
             FutureResult.wait_for_data(closure.args),
             FutureResult.wait_for_data(closure.kwargs),
         )
-        future = self._submit(wait_closure)
-        return FutureResult.promise_data(future, wait_closure.get_result_api())
+        result = wait_closure.cached_result()
+        if result is NotImplemented:
+            future = self._submit(wait_closure)
+            return FutureResult.promise_data(future, wait_closure.get_result_api())
+        return result
 
     def _submit(self, closure: Closure):
         raise NotImplementedError

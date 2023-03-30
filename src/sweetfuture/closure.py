@@ -35,6 +35,18 @@ class Closure:
     args: list = attrs.field(default=attrs.Factory(list))
     kwargs: dict[str, Any] = attrs.field(default=attrs.Factory(dict))
 
+    def validated_call(self) -> Any:
+        parameters = self.get_parameters()
+        parameters_api = self.get_parameter_api()
+        validate("parameters", parameters, parameters_api)
+        result = self.metafunc(*self.args, **self.kwargs)
+        result_api = self.get_result_api()
+        validate("result", result, result_api)
+        return result
+
+    def cached_result(self) -> Any:
+        return self.metafunc.cached_result(*self.args, **self.kwargs)
+
     def get_parameters(self) -> dict[str, Any]:
         """Return a dictionary with all parameters (including positional ones)."""
         signature = inspect.signature(self.metafunc.__call__)
@@ -51,15 +63,6 @@ class Closure:
         parameters = self.get_parameters()
         parameters_api = self.get_parameter_api()
         validate("parameters", parameters, parameters_api)
-
-    def validated_call(self) -> Any:
-        parameters = self.get_parameters()
-        parameters_api = self.get_parameter_api()
-        validate("parameters", parameters, parameters_api)
-        result = self.metafunc(*self.args, **self.kwargs)
-        result_api = self.get_result_api()
-        validate("result", result, result_api)
-        return result
 
     def get_result_mock(self) -> Any:
         return self.metafunc.get_result_mock(*self.args, **self.kwargs)

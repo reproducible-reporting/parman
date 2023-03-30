@@ -81,42 +81,56 @@ class Job(MetaFuncBase):
         return cls(template, jobinfo_source)
 
     def __call__(self, clerk: ClerkBase, locator: str, kwargs: dict[str, Any]) -> Any:
-        """The method to be submitted to an executor."""
         result_api = type_api_from_mock(self.result_mock_func(**kwargs))
         with clerk.workdir(locator) as workdir:
+            print("Starting", locator)
+            shutil.copytree(self.template, workdir, dirs_exist_ok=True)
+            kwargs = clerk.localize(kwargs, workdir, locator)
+            with open(os.path.join(workdir, "kwargs.json"), "w") as f:
+                json.dump(unstructure(kwargs), f)
+            fn_out = os.path.join(workdir, "job.out")
+            fn_err = os.path.join(workdir, "job.err")
+            try:
+                with open(fn_out, "w") as fo, open(fn_err, "w") as fe:
+                    subprocess.run(
+                        "./run",
+                        stdin=subprocess.DEVNULL,
+                        stdout=fo,
+                        stderr=fe,
+                        shell=True,
+                        cwd=workdir,
+                        check=True,
+                    )
+            except subprocess.CalledProcessError as exc:
+                with open(fn_err) as f:
+                    sys.stderr.write(f.read())
+                exc.add_note(f"Run script failed for {locator}.")
+                raise exc
             fn_result = os.path.join(
                 workdir, clerk.localize(locator / Path("result.json"), workdir, locator)
             )
-            if not os.path.exists(fn_result):
-                print("Starting", locator)
-                shutil.copytree(self.template, workdir, dirs_exist_ok=True)
-                kwargs = clerk.localize(kwargs, workdir, locator)
-                with open(os.path.join(workdir, "kwargs.json"), "w") as f:
-                    json.dump(unstructure(kwargs), f)
-                fn_out = os.path.join(workdir, "job.out")
-                fn_err = os.path.join(workdir, "job.err")
-                try:
-                    with open(fn_out, "w") as fo, open(fn_err, "w") as fe:
-                        subprocess.run(
-                            "./run",
-                            stdin=subprocess.DEVNULL,
-                            stdout=fo,
-                            stderr=fe,
-                            shell=True,
-                            cwd=workdir,
-                            check=True,
-                        )
-                except subprocess.CalledProcessError as exc:
-                    with open(fn_err) as f:
-                        sys.stderr.write(f.read())
-                    exc.add_note(f"Run script failed for {locator}.")
-                    raise exc
             if not os.path.exists(fn_result):
                 raise OSError(f"No result.json after completion of {locator}")
             with open(fn_result) as f:
                 result = structure("result", json.load(f), result_api)
             result = clerk.globalize(result, workdir, locator)
         return result
+
+    def cached_result(self, clerk: ClerkBase, locator: str, kwargs: dict[str, Any]) -> Any:
+        # TODO: Find nice way to reduce redundancy with __call__ method.
+        # TODO: Add mechanism to detect inconsistency between old and new kwargs.
+        #       In that case, the result should be recompouted and this method should return
+        #       NotImplemented
+        result_api = type_api_from_mock(self.result_mock_func(**kwargs))
+        with clerk.workdir(locator) as workdir:
+            fn_result = os.path.join(
+                workdir, clerk.localize(locator / Path("result.json"), workdir, locator)
+            )
+            if os.path.exists(fn_result):
+                with open(fn_result) as f:
+                    result = structure("result", json.load(f), result_api)
+                return clerk.globalize(result, workdir, locator)
+        return NotImplemented
 
     def get_parameters_api(
         self, clerk: ClerkBase, locator: str, kwargs: dict[str, Any]

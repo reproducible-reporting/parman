@@ -34,4 +34,7 @@ class SerialRunner(RunnerBase):
     """Just execute everything right away."""
 
     def __call__(self, closure: Closure) -> Any:
-        return closure.validated_call()
+        result = closure.cached_result()
+        if result is NotImplemented:
+            return closure.validated_call()
+        return result
