@@ -34,5 +34,6 @@ class DryRunner(RunnerBase):
     """Just check inputs and generate example outputs."""
 
     def __call__(self, closure: Closure) -> Any:
+        print(f"Validating {closure.describe()}")
         closure.validate_parameters()
         return closure.get_result_mock()

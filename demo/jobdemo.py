@@ -5,15 +5,15 @@ import parsl
 
 from sweetfuture.job import job
 from sweetfuture.runners.concurrent import ConcurrentRunner
-from sweetfuture.runners.dask import DaskRunner
 from sweetfuture.runners.dry import DryRunner
 from sweetfuture.runners.parsl import ParslRunner
 from sweetfuture.runners.serial import SerialRunner
 
-# from concurrent.futures import ThreadPoolExecutor
-
+# from concurrent.futures import ProcessPoolExecutor
 
 FRAMEWORK = "concurrent"
+SCHEDULE = True
+
 BOOT_SIZE = 50
 SAMPLE_SIZE = 50
 COMMITTEE_SIZE = 10
@@ -57,14 +57,14 @@ def train(runner, igen, examples):
     ]
 
 
-def main():
+def setup_runner():
     if FRAMEWORK == "dry":
-        runner = DryRunner()
+        return DryRunner()
     elif FRAMEWORK == "serial":
-        runner = SerialRunner()
+        return SerialRunner()
     elif FRAMEWORK == "concurrent":
-        runner = ConcurrentRunner()
-        # runner = ConcurrentRunner(Clerk(), ThreadPoolExecutor(max_workers=8))
+        return ConcurrentRunner(schedule=SCHEDULE)
+        # return ConcurrentRunner(executor=ProcessPoolExecutor(max_workers=8))
     elif FRAMEWORK == "parsl-local":
         config = parsl.config.Config(
             executors=[
@@ -79,7 +79,7 @@ def main():
             ],
             strategy="none",
         )
-        runner = ParslRunner(dfk=parsl.load(config))
+        return ParslRunner(schedule=SCHEDULE, dfk=parsl.load(config))
     elif FRAMEWORK == "parsl-slurm":
         config = parsl.config.Config(
             executors=[
@@ -103,12 +103,14 @@ def main():
             ],
             strategy="none",
         )
-        runner = ParslRunner(dfk=parsl.load(config))
-    elif FRAMEWORK == "dask":
-        runner = DaskRunner()
+        return ParslRunner(schedule=SCHEDULE, dfk=parsl.load(config))
     else:
         raise ValueError("invalid framework")
 
+
+def main():
+    """Main function defining the job workflow."""
+    runner = setup_runner()
     examples = []
     configs = runner(job("templates/boot", "g00/boot", boot_size=BOOT_SIZE))
     examples.extend(compute(runner, 0, configs))
@@ -117,7 +119,7 @@ def main():
         configs = sample(runner, igen, models)
         examples.extend(compute(runner, igen, configs))
         models = train(runner, igen, examples)
-    runner.wait()
+    runner.shutdown()
 
 
 if __name__ == "__main__":

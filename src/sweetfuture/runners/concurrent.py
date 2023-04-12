@@ -19,7 +19,7 @@
 # --
 """Concurrent job runner, wrapper around a standard Executor from concurrent.futures."""
 
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import Future, ThreadPoolExecutor
 
 import attrs
 
@@ -36,12 +36,18 @@ class ConcurrentRunner(FutureRunnerBase):
     executor = attrs.field(default=None)
 
     def __attrs_post_init__(self):
+        FutureRunnerBase.__attrs_post_init__(self)
         if self.executor is None:
-            self.executor = ProcessPoolExecutor()
+            self.executor = ThreadPoolExecutor()
 
-    def _submit(self, closure: Closure):
-        return self.executor.submit(Closure.validated_call, closure)
+    def _submit(self, closure: Closure) -> Future:
+        closure = self._unpack_data(closure)
+        print(f"Submitting {closure.describe()}")
+        with self._submit_lock:
+            future = self.executor.submit(Closure.validated_call, closure)
+        return future
 
-    def wait(self):
-        """Wait until all jobs have completed."""
+    def shutdown(self):
+        """Wait for all futures to complete."""
+        FutureRunnerBase.shutdown(self)
         self.executor.shutdown()

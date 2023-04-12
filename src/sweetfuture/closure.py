@@ -20,11 +20,14 @@
 """Bundled information for a function to be submitted."""
 
 import inspect
+from concurrent.futures import Future
+from copy import deepcopy
 from typing import Any
 
 import attrs
 
 from .metafunc import MetaFuncBase, validate
+from .recursive import recursive_transform
 
 
 @attrs.define
@@ -34,6 +37,18 @@ class Closure:
     metafunc: MetaFuncBase = attrs.field()
     args: list = attrs.field(default=attrs.Factory(list))
     kwargs: dict[str, Any] = attrs.field(default=attrs.Factory(dict))
+
+    def __attrs_post_init__(self):
+        # Take copies of the arguments at the time the closure is created,
+        # so that later in-place changes to the original arguments are ignored.
+        # This eliminates race conditions that would otherwise by hard to
+        # detect with the ThreadPoolExecutor (and possibly others).
+        self.args = _safe_deepcopy_data(self.args)
+        self.kwargs = _safe_deepcopy_data(self.kwargs)
+
+    def describe(self) -> str:
+        """Describe this closure."""
+        return self.metafunc.describe(*self.args, **self.kwargs)
 
     def validated_call(self) -> Any:
         parameters = self.get_parameters()
@@ -72,3 +87,17 @@ class Closure:
 
     def get_resources(self) -> dict:
         return self.metafunc.get_resources(*self.args, **self.kwargs)
+
+
+def _safe_deepcopy_data(data: Any) -> Any:
+    """Return a deepcopy, except that futures are passed through.
+
+    Futures are only handled correctly when they are list items or dictionary values,
+    and only when these lists or dictionaries are list items or dictionary values themselves,
+    recursively all the way up to the data argument.
+    In all other cases, the deepcopy of the Future instance may result in an error.
+    (Circumventing that error, e.g. with __deepcopy__, will give unpredictable results.)
+    """
+    return recursive_transform(
+        lambda _, field: field if isinstance(field, Future) else deepcopy(field), data
+    )

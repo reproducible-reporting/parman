@@ -19,6 +19,8 @@
 # --
 """Parsl job runner, wraps around Parsl AppFuture."""
 
+from concurrent.futures import Future
+
 import attrs
 from parsl.dataflow.dflow import DataFlowKernelLoader
 
@@ -35,13 +37,19 @@ class ParslRunner(FutureRunnerBase):
     dfk: DataFlowKernelLoader = attrs.field(default=None)
 
     def __attrs_post_init__(self):
+        FutureRunnerBase.__attrs_post_init__(self)
         if self.dfk is None:
             self.dfk = DataFlowKernelLoader.load()
 
-    def _submit(self, closure: Closure):
+    def _submit(self, closure: Closure) -> Future:
+        closure = self._unpack_data(closure)
         executors = closure.get_resources().get("parsl_executors", "all")
-        return self.dfk.submit(Closure.validated_call, [closure], executors)
+        print(f"Submitting {closure.describe()}")
+        with self._submit_lock:
+            future = self.dfk.submit(Closure.validated_call, [closure], executors)
+        return future
 
-    def wait(self):
-        """Wait until all jobs have completed."""
+    def shutdown(self):
+        """Wait for all futures to complete."""
+        FutureRunnerBase.shutdown(self)
         self.dfk.wait_for_current_tasks()

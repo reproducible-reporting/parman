@@ -36,6 +36,6 @@ class RunnerBase:
         """Validate parameters, execute function (somewhere), validate result."""
         raise NotImplementedError
 
-    def wait(self):
+    def shutdown(self):
         """Wait until all jobs have completed."""
         pass

@@ -64,6 +64,10 @@ class MetaFuncBase:
     but this may be modified in subclasses.
     """
 
+    def describe(self, *args, **kwargs) -> str:
+        """Describe this metafunc."""
+        return "unnamed"
+
     def __call__(self, *args, **kwargs) -> Any:
         """The method to be submitted to an executor."""
         raise NotImplementedError

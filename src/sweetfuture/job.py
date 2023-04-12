@@ -80,10 +80,13 @@ class Job(MetaFuncBase):
             jobinfo_source = f.read()
         return cls(template, jobinfo_source)
 
+    def describe(self, clerk: ClerkBase, locator: str, kwargs: dict[str, Any]) -> Any:
+        return locator
+
     def __call__(self, clerk: ClerkBase, locator: str, kwargs: dict[str, Any]) -> Any:
         result_api = type_api_from_mock(self.result_mock_func(**kwargs))
         with clerk.workdir(locator) as workdir:
-            print("Starting", locator)
+            print(f"Starting {locator}")
             shutil.copytree(self.template, workdir, dirs_exist_ok=True)
             kwargs = clerk.localize(kwargs, workdir, locator)
             with open(os.path.join(workdir, "kwargs.json"), "w") as f:
@@ -114,6 +117,7 @@ class Job(MetaFuncBase):
             with open(fn_result) as f:
                 result = structure("result", json.load(f), result_api)
             result = clerk.globalize(result, workdir, locator)
+            print(f"Completed {locator}")
         return result
 
     def cached_result(self, clerk: ClerkBase, locator: str, kwargs: dict[str, Any]) -> Any:

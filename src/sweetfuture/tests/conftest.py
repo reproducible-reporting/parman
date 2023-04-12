@@ -17,31 +17,24 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-"""Dask job runner, wrapper for Dask futures."""
+"""Shared fixtures for the unit tests."""
 
-import attrs
-from dask.distributed import Client
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 
-from ..closure import Closure
-from .future import FutureRunnerBase
-
-__all__ = ("DaskRunner",)
+import pytest
 
 
-@attrs.define
-class DaskRunner(FutureRunnerBase):
-    """Run jobs asynchronously with ProcessPoolExecutor"""
+@pytest.fixture(params=[ProcessPoolExecutor, ThreadPoolExecutor])
+def pool(request):
+    """Default executor from concurrent.futures."""
+    PoolExecutor = request.param
+    with PoolExecutor() as pool:
+        yield pool
 
-    client = attrs.field(default=None)
 
-    def __attrs_post_init__(self):
-        if self.client is None:
-            self.client = Client()
-
-    def _submit(self, closure: Closure):
-        submit_kwargs = closure.get_resources().get("dask_submit_kwargs", {})
-        return self.client.submit(Closure.validated_call, closure, **submit_kwargs)
-
-    def wait(self):
-        """Wait until all jobs have completed."""
-        self.client.shutdown()
+@pytest.fixture(params=[ProcessPoolExecutor, ThreadPoolExecutor])
+def pool1(request):
+    """Single-worker executor from concurrent.futures."""
+    PoolExecutor = request.param
+    with PoolExecutor(max_workers=1) as pool:
+        yield pool

@@ -2,26 +2,64 @@
 
 At this stage, SweetFuture is a prototype, so expect a rocky road ahead.
 
-## Design goals
+The goal of SweetFuture is to extend `concurrent.futures` (and compatible implementations)
+with features that facilitate a transparent implementation of workflows.
 
-- Wrap `futures` APIs, completely hiding parallelization technicalities.
-  Workflows are written as if they are serial.
-  You may still access the `Future` objects, but you generally don't have to.
-- Compatibility with other futures-based frameworks like Dask and Parsl.
+- `WaitFuture`: a Future subclass that is "finished" after its dependencies have finished.
+  (To be created with `WaitGraph.submit`, which never blocks.)
+- `ScheduledFuture`: a Future subclass that submits a Future after its dependencies have finished.
+  (To be created with `Scheduler.submit`, which never blocks.)
+- Various `Runner` classes, similar to Executors, which dispatch function calls elsewhere.
+  The main differences with conventional executors being:
+  - Closures are submitted for (remote) execution, which contain more metadata,
+    e.g. about (keyword) arguments and return values, than ordinary functions
+    The extra metadata offer several advantages...
+  - A dry run can be carried out to quickly validate the connectivity of steps in workflow
+    before launching a full scale calculation.
+  - Closure arguments may contain futures.
+    If `schedule=True` is set, closures are scheduled for later execution
+    when not all dependency futures have finished yet.
+    (Dependencies are inferred from the arguments and keyword arguments.)
+    Otherwise, the runner will block until all futures have completed.
+  - Closure return values are instantiated as much as possible,
+    instead of just returning a future.
+    They may contain futures more deeply nested for parts of the return value,
+    This makes it easier to submit more closures further down the workflow.
+
+As a result, workflows can be implemented efficiently with relatively simple Python scripts,
+mostly hiding the interaction with Future objects.
+
+Other useful features:
+
+- Compatible with Python's built-in Concurrent package and [Parsl](parsl.readthedocs.io).
+  (Parls is an optional dependency.)
 - Simplicity:
-  - Lower learning curve than Dask or Parsl.
   - Template jobs, for a straightforward migration of existing job scripts.
-  - Minimal dependencies.
+  - Minimal Python package dependencies.
   - Minimal API.
-  - Job dependencies are automatically tracked through future results,
-    which are pushed as deep as possible in nested results,
-    hiding them from the workflow code as much as possible.
-    This is similar to Parsl's DataFuture, but with some extra's:
-    - A runner can return more than a future, also a nested datastructure containing FutureResult
-      instances.
-    - The runner can take similar nested structures containing FutureResult instances,
-      detects these, waits for their completion and calls the job with the result.
 
-## Future plans
+
+## Getting started
+
+### Install
+
+TODO
+
+### Examples
+
+At this stage, there is no documentation as such.
+Read the source and check out the [demos](demo/).
+
+
+## Non-goals
+
+- Support for Dask, because:
+  1. The Dask `Future` does not subclass from `concurrent.futures.Future`.
+     Supporting dask would imply a lot of extra boilerplate code in SweetFuture.
+  2. The Dask `Future` implements only a subset of `concurrent.futures.Future`.
+  3. Dask Distributed has a large memory and time overhead, and it has little advantages over Parsl.
+
+
+## Plans
 
 - Write a better README.

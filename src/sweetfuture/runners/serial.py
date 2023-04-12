@@ -36,5 +36,7 @@ class SerialRunner(RunnerBase):
     def __call__(self, closure: Closure) -> Any:
         result = closure.cached_result()
         if result is NotImplemented:
-            return closure.validated_call()
+            result = closure.validated_call()
+        else:
+            print(f"Reusing {closure.describe()}")
         return result
