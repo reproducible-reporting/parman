@@ -56,12 +56,19 @@ __all__ = ("MetaFuncBase", "validate", "type_api_from_signature", "type_api_from
 class MetaFuncBase:
     """A callable and its metadata for use in a parallel workflow.
 
-    Subclasses implement `__call__`, `get_parameters_api`, `get_result_api` and `get_resources`
-    such that they all take the same arguments.
-    Here, methodes take generic (*args, **kwargs), but subclasses can change this.
+    Subclasses override the following methods:
 
-    The default behavior is to deduce the signature from the __call__ method,
-    but this may be modified in subclasses.
+    - ``describe`` (optional, highly recommended)
+    - ``__call__`` (mandatory),
+    - ``get_parameters_api`` (optional)
+      The default behavior is to deduce the signature from the __call__ method,
+      but this may be modified in subclasses.
+    - ``get_result_api`` (mandatory)
+    - ``get_resources`` (optional)
+      The default is to return an empty dictionary.
+
+    All these methods must take the same arguments.
+    Here, they take generic (*args, **kwargs), but subclasses can change this.
     """
 
     def describe(self, *args, **kwargs) -> str:
@@ -122,7 +129,7 @@ class MetaFuncBase:
             A dictionary with information that Runners may use decide how and where to
             execute this function.
         """
-        raise NotImplementedError
+        return {}
 
 
 def validate(prefix, data, type_api):

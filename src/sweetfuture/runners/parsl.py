@@ -17,7 +17,12 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-"""Parsl job runner, wraps around Parsl AppFuture."""
+"""Parsl job runner, wraps around Parsl AppFuture.
+
+From the ``resources`` dictionary attribute of the MetaFunc and Closure, only the
+file ``parsl_executors`` is used. (If not present, ``all`` is used by default.)
+This is passed into ``parsl.dataflow.dflow.DataFlowKernel.submit``.
+"""
 
 from concurrent.futures import Future
 
