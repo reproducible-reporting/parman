@@ -7,7 +7,4 @@ def get_result_mock(config: Path):
     return Path("__computed__")
 
 
-resources = {
-    "parsl_executors": "all",
-    "dask_submit_kwargs": {},
-}
+resources = {"parsl_executors": "all"}
