@@ -48,7 +48,8 @@ TODO
 ### Examples
 
 At this stage, there is no documentation as such.
-Read the source and check out the [demos](demo/).
+If you want to know how to use SweetFuture, check out the [demos](demos/).
+If you want to understand the internals, read the source and the docstrings.
 
 
 ## Non-goals
