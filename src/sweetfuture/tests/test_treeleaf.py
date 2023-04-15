@@ -17,12 +17,12 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-"""Unit tests for sweetfuture.recursive."""
+"""Unit tests for sweetfuture.treeleaf."""
 
 
 import pytest
 
-from ..recursive import recursive_get, recursive_iterate, recursive_transform, same
+from ..treeleaf import get_tree, iterate_tree, same, transform_tree
 
 
 @pytest.mark.parametrize(
@@ -40,8 +40,8 @@ from ..recursive import recursive_get, recursive_iterate, recursive_transform, s
         ({1: "a", "b": [2, [{"c": 3}]]}, ("b", 1, 0, "c"), 3),
     ],
 )
-def test_recursive_get(tree, mulidx, value):
-    assert recursive_get(tree, mulidx) == value
+def test_get_tree(tree, mulidx, value):
+    assert get_tree(tree, mulidx) == value
 
 
 @pytest.mark.parametrize(
@@ -55,8 +55,8 @@ def test_recursive_get(tree, mulidx, value):
         ({2: "a", "b": [[[3]], 4]}, [((2,), "a"), (("b", 0, 0, 0), 3), (("b", 1), 4)]),
     ],
 )
-def test_recursive_iterate_single(tree, items):
-    assert list(recursive_iterate(tree)) == items
+def test_iterate_tree_single(tree, items):
+    assert list(iterate_tree(tree)) == items
 
 
 @pytest.mark.parametrize(
@@ -88,8 +88,8 @@ def test_recursive_iterate_single(tree, items):
         ),
     ],
 )
-def test_recursive_iterate_multiple(trees, items):
-    assert list(recursive_iterate(*trees)) == items
+def test_iterate_tree_multiple(trees, items):
+    assert list(iterate_tree(*trees)) == items
 
 
 @pytest.mark.parametrize(
@@ -108,11 +108,11 @@ def test_recursive_iterate_multiple(trees, items):
         ),
     ],
 )
-def test_recursive_transform_str(intrees, outtree):
-    def transform_str(mulidx, *fields):
-        return str(mulidx) + "".join(str(field) for field in fields)
+def test_transform_tree_str(intrees, outtree):
+    def transform_str(mulidx, *leafs):
+        return str(mulidx) + "".join(str(leaf) for leaf in leafs)
 
-    assert recursive_transform(transform_str, *intrees) == outtree
+    assert transform_tree(transform_str, *intrees) == outtree
 
 
 def test_same():

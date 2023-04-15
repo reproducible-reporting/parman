@@ -27,8 +27,8 @@ from typing import Any
 import attrs
 
 from ..closure import Closure
-from ..recursive import recursive_get, recursive_iterate, recursive_transform
 from ..scheduler import Scheduler
+from ..treeleaf import get_tree, iterate_tree, transform_tree
 from ..waitfuture import WaitGraph
 from .base import RunnerBase
 
@@ -58,9 +58,9 @@ class FutureRunnerBase(RunnerBase):
             if self.schedule:
                 dependencies = []
                 for data in closure.args, closure.kwargs:
-                    for _, field in recursive_iterate(data):
-                        if isinstance(field, Future):
-                            dependencies.append(field)
+                    for _, leaf in iterate_tree(data):
+                        if isinstance(leaf, Future):
+                            dependencies.append(leaf)
                 print(f"Scheduling {closure.describe()} after {len(dependencies)} futures")
                 future = self._scheduler.submit([closure], {}, dependencies)
             else:
@@ -104,16 +104,16 @@ class FutureRunnerBase(RunnerBase):
 
 def _wait_for_data(data: Any) -> Any:
     """Recursively replace Futures by actual results, waiting if needed."""
-    return recursive_transform(
-        lambda _, field: field.result() if isinstance(field, Future) else field,
+    return transform_tree(
+        lambda _, leaf: leaf.result() if isinstance(leaf, Future) else leaf,
         data,
     )
 
 
 def _validate_done(needed_for: str, data: Any) -> Any:
     """Validate that all futures (nested recursively) are done."""
-    for mulidx, field in recursive_iterate(data):
-        if isinstance(field, Future) and not field.done():
+    for mulidx, leaf in iterate_tree(data):
+        if isinstance(leaf, Future) and not leaf.done():
             raise RuntimeError(
                 f"Trying to get an unavailable result for argument {mulidx} of {needed_for}."
             )
@@ -121,7 +121,7 @@ def _validate_done(needed_for: str, data: Any) -> Any:
 
 def _promise_data(future: Future, wait_graph: WaitGraph, data_api: Any) -> Any:
     """Build a result, recursively inserting Futures for all return values."""
-    return recursive_transform(
-        lambda mulidx, _: wait_graph.submit([future], partial(recursive_get, mulidx=mulidx)),
+    return transform_tree(
+        lambda mulidx, _: wait_graph.submit([future], partial(get_tree, mulidx=mulidx)),
         data_api,
     )

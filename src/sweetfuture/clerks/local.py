@@ -26,7 +26,7 @@ from typing import Any
 
 import attrs
 
-from ..recursive import recursive_transform
+from ..treeleaf import transform_tree
 from .base import ClerkBase
 
 __all__ = ("LocalClerk",)
@@ -44,13 +44,13 @@ class LocalClerk(ClerkBase):
         yield workdir
 
     def localize(self, data: Any, jobdir: str, locator: str) -> Any:
-        def transform(_, field):
+        def transform(_, leaf):
             # pathlib is still work in progress, so it seems. :(
-            return Path(os.path.relpath(field, locator)) if isinstance(field, Path) else field
+            return Path(os.path.relpath(leaf, locator)) if isinstance(leaf, Path) else leaf
 
-        return recursive_transform(transform, data)
+        return transform_tree(transform, data)
 
     def globalize(self, data: Any, jobdir: str, locator: str) -> Any:
-        return recursive_transform(
-            lambda _, field: locator / field if isinstance(field, Path) else field, data
+        return transform_tree(
+            lambda _, leaf: locator / leaf if isinstance(leaf, Path) else leaf, data
         )

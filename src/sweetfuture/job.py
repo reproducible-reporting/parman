@@ -36,7 +36,7 @@ from .clerks.base import ClerkBase
 from .clerks.local import LocalClerk
 from .closure import Closure
 from .metafunc import MetaFuncBase, type_api_from_mock, type_api_from_signature
-from .recursive import recursive_transform
+from .treeleaf import transform_tree
 
 __all__ = ("job", "structure", "unstructure")
 
@@ -67,7 +67,7 @@ class Job(MetaFuncBase):
         self.__attrs_post_init__()
 
     def __attrs_post_init__(self):
-        # Execute the jobinfo source to fill in the extra fields.
+        # Execute the jobinfo source to fill in the other attributes.
         ns = {}
         exec(self.jobinfo_source, ns)
         self.resources = ns.get("resources", {})
@@ -156,25 +156,25 @@ class Job(MetaFuncBase):
 
 
 def structure(prefix, json_data, data_api):
-    def transform(mulidx, json_field, field_api):
-        if not isinstance(field_api, (type, types.GenericAlias)):
-            raise TypeError(f"{prefix} at {mulidx}: cannot structure type {field_api}")
+    def transform(mulidx, json_leaf, leaf_api):
+        if not isinstance(leaf_api, (type, types.GenericAlias)):
+            raise TypeError(f"{prefix} at {mulidx}: cannot structure type {leaf_api}")
         try:
-            return cattrs.structure(json_field, field_api)
+            return cattrs.structure(json_leaf, leaf_api)
         except cattrs.IterableValidationError as exc:
             raise TypeError(
-                f"{prefix} at {mulidx}: {json_field} does not conform {field_api}"
+                f"{prefix} at {mulidx}: {json_leaf} does not conform {leaf_api}"
             ) from exc
         except cattrs.StructureHandlerNotFoundError as exc:
             raise TypeError(
-                f"{prefix} at {mulidx}: type {field_api} cannot be instantiated"
+                f"{prefix} at {mulidx}: type {leaf_api} cannot be instantiated"
             ) from exc
 
-    return recursive_transform(transform, json_data, data_api)
+    return transform_tree(transform, json_data, data_api)
 
 
 def unstructure(data):
-    return recursive_transform(lambda _, field: cattrs.unstructure(field), data)
+    return transform_tree(lambda _, leaf: cattrs.unstructure(leaf), data)
 
 
 @attrs.define

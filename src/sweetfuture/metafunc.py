@@ -47,7 +47,7 @@ from typing import Any
 import attrs
 import cattrs
 
-from .recursive import recursive_iterate, recursive_transform
+from .treeleaf import iterate_tree, transform_tree
 
 __all__ = ("MetaFuncBase", "validate", "type_api_from_signature", "type_api_from_mock")
 
@@ -142,17 +142,17 @@ def validate(prefix, data, type_api):
     TypeError
         When a type error is encountered in the data.
     """
-    for mulidx, (field, field_type) in recursive_iterate(data, type_api):
+    for mulidx, (leaf, leaf_type) in iterate_tree(data, type_api):
         # Use cattrs magic to check the type
-        if not isinstance(field_type, (type, types.GenericAlias)):
-            raise TypeError(f"{prefix} at {mulidx}: cannot type-check {field} with {field_type}")
+        if not isinstance(leaf_type, (type, types.GenericAlias)):
+            raise TypeError(f"{prefix} at {mulidx}: cannot type-check {leaf} with {leaf_type}")
         try:
-            cattrs.structure(field, field_type)
+            cattrs.structure(leaf, leaf_type)
         except cattrs.IterableValidationError as exc:
-            raise TypeError(f"{prefix} at {mulidx}: {field} does not conform {field_type}") from exc
+            raise TypeError(f"{prefix} at {mulidx}: {leaf} does not conform {leaf_type}") from exc
         except cattrs.StructureHandlerNotFoundError as exc:
             raise TypeError(
-                f"{prefix} at {mulidx}: type {field_type} cannot be instantiated"
+                f"{prefix} at {mulidx}: type {leaf_type} cannot be instantiated"
             ) from exc
 
 
@@ -175,9 +175,9 @@ def type_api_from_signature(signature):
 def type_api_from_mock(mock_api):
     """Derive a type_api (suitable for the validate function) from example data, mock_api."""
 
-    def transform(_, mock_field):
-        if isinstance(mock_field, type):
+    def transform(_, mock_leaf):
+        if isinstance(mock_leaf, type):
             raise TypeError("A mock_api cannot contain types.")
-        return type(mock_field)
+        return type(mock_leaf)
 
-    return recursive_transform(transform, mock_api)
+    return transform_tree(transform, mock_api)

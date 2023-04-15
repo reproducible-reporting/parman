@@ -27,7 +27,7 @@ from typing import Any
 import attrs
 
 from .metafunc import MetaFuncBase, validate
-from .recursive import recursive_transform
+from .treeleaf import transform_tree
 
 
 @attrs.define
@@ -98,6 +98,6 @@ def _safe_deepcopy_data(data: Any) -> Any:
     In all other cases, the deepcopy of the Future instance may result in an error.
     (Circumventing that error, e.g. with __deepcopy__, will give unpredictable results.)
     """
-    return recursive_transform(
-        lambda _, field: field if isinstance(field, Future) else deepcopy(field), data
+    return transform_tree(
+        lambda _, leaf: leaf if isinstance(leaf, Future) else deepcopy(leaf), data
     )
