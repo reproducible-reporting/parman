@@ -51,6 +51,7 @@ class Closure:
         return self.metafunc.describe(*self.args, **self.kwargs)
 
     def validated_call(self) -> Any:
+        """Validate the parameters, call the metafunction, validate and return the result."""
         parameters = self.get_parameters()
         parameters_api = self.get_parameter_api()
         validate("parameters", parameters, parameters_api)
@@ -60,6 +61,7 @@ class Closure:
         return result
 
     def cached_result(self) -> Any:
+        """Get the cached result."""
         return self.metafunc.cached_result(*self.args, **self.kwargs)
 
     def get_parameters(self) -> dict[str, Any]:
@@ -80,12 +82,15 @@ class Closure:
         validate("parameters", parameters, parameters_api)
 
     def get_result_mock(self) -> Any:
+        """Get the mock result."""
         return self.metafunc.get_result_mock(*self.args, **self.kwargs)
 
     def get_result_api(self) -> Any:
+        """Get the result API, typically derived from the mock result."""
         return self.metafunc.get_result_api(*self.args, **self.kwargs)
 
     def get_resources(self) -> dict:
+        """Get the resources dictionary."""
         return self.metafunc.get_resources(*self.args, **self.kwargs)
 
 
