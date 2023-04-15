@@ -2,6 +2,7 @@
 
 # Extract config file from json with Python inline code
 FN_CONFIG=$(python -c 'import json; print(json.load(open("kwargs.json"))["config"])')
+PAUSE=$(python -c 'import json; print(json.load(open("kwargs.json"))["pause"])')
 # Alternative tools doing the same, which need to be installed:
 # FN_CONFIG=$(jq -r .config kwargs.json)
 # FN_CONFIG=$(gojq -r .config kwargs.json)
@@ -9,5 +10,5 @@ FN_CONFIG=$(python -c 'import json; print(json.load(open("kwargs.json"))["config
 
 echo "Computing some result"
 echo "Did something with ${FN_CONFIG}" > computation.out
-sleep 1
+sleep ${PAUSE}
 echo '"computation.out"' > result.json

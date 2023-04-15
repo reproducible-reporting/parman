@@ -19,7 +19,7 @@ def main():
     with open("model.json", "w") as f:
         json.dump(data, f)
 
-    time.sleep(1)
+    time.sleep(kwargs["pause"])
 
     print("writing result file")
     with open("result.json", "w") as f:
