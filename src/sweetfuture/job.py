@@ -24,10 +24,12 @@ A job script can be prepared in a template directory with the following elements
 - A file ``jobinfo.py`` describing the metadata needed to schedule the job in the workflow.
 - A file ``run`` (or other) with the script to be executed.
 
-The template directory will be copied every time it needs to be executed (with different parameters).
-The job script can read its parameters from a file ``kwargs.json`` and must store the essential
-results in ``result.json``. Only keyword arguments are allowed to make the arguments more
-self-explaining.
+The template directory will be copied to a working directory, every time a job is executed
+(with different parameters). Before, the job is executed, a file ``kwargs.json`` is created
+in the work directory from which the job script can read it parameters. Only keyword arguments
+are allowed to make the arguments more self-explaining. The job writes its results to
+``result.json``. If the jobs fails, not writing this file will raise an exception and end the
+workflow (after other running jobs have completed).
 
 The ``jobinfo.py`` can specify three things:
 
@@ -45,12 +47,23 @@ The ``jobinfo.py`` can specify three things:
    a more detailed parameters API than what is possible with type hints.
    It can also be useful when the parameters API depends on values in the parameters,
    although this seems to be a rather exotic scenario.
+
+Other files in the work directory that may be relevant or useful:
+
+- ``kwargs.sha256``: SHA256 sums of all files present in ``kwargs.json``, used to check if the
+  results can be reused without recomputation.
+- ``result.extra``: A list of files that are also worth keeping, even though they are not
+  mentioned in ``result.json``.
+- ``run.out``: the standard output of the run script.
+- ``run.err``: the standard error of the run script.
 """
 
+import hashlib
 import inspect
 import json
 import os
 import shutil
+import string
 import subprocess
 import sys
 import types
@@ -61,10 +74,10 @@ import attrs
 import cattrs
 
 from .clerks.base import ClerkBase
-from .clerks.local import LocalClerk
+from .clerks.localtemp import LocalTempClerk
 from .closure import Closure
 from .metafunc import MetaFuncBase, type_api_from_mock, type_api_from_signature
-from .treeleaf import transform_tree
+from .treeleaf import iterate_tree, transform_tree
 
 __all__ = ("job", "structure", "unstructure")
 
@@ -77,9 +90,23 @@ cattrs.register_unstructure_hook(Path, lambda d: str(d))
 
 @attrs.define
 class Job(MetaFuncBase):
-    """A metafunction implementation of a job script."""
+    """A metafunction implementation of a job script.
 
-    template: str = attrs.field()
+    Attributes
+    ----------
+    template
+        The absolute path to a template directory.
+    jobinfo_source
+        The source loaded from the ``jobinfo.py`` file.
+    resources
+        The resources defined in ``jobinfo.py``.
+    parameters_api_func
+        The parameters_api_func defined in ``jobinfo.py``.
+    result_mock_func
+        The result_mock_func defined in ``jobinfo.py``.
+    """
+
+    template: Path = attrs.field()
     jobinfo_source: str = attrs.field()
     resources: dict[str, Any] = attrs.field(init=False)
     parameters_api_func: callable = attrs.field(init=False)
@@ -104,13 +131,19 @@ class Job(MetaFuncBase):
         self.result_mock_func = ns["get_result_mock"]
 
     @classmethod
-    def from_template(cls, template):
+    def from_template(cls, template: str):
         """Initialize a job script from a template directory.
 
-        The directory must contain a ``jobinfo.py`` file with the metadata needed to schedule
-        the job in SweetFuture. See module-level docstring for more information on this file.
+        Parameters
+        ----------
+        template
+            The template directory must contain a ``jobinfo.py`` file with the metadata
+            needed to schedule the job in SweetFuture.
+            See module-level docstring for more information on this file.
+            When the template is a relative path, it gets converted to an absolute one.
         """
-        with open(os.path.join(template, "jobinfo.py")) as f:
+        template = Path(template).absolute()
+        with open(template / "jobinfo.py") as f:
             jobinfo_source = f.read()
         return cls(template, jobinfo_source)
 
@@ -146,13 +179,19 @@ class Job(MetaFuncBase):
             Output files needed by following jobs must be included here.
         """
 
-        def run(workdir):
+        def run(workdir: Path) -> bool:
             print(f"Starting {locator}")
+
+            # Initialize the work directory
             shutil.copytree(self.template, workdir, dirs_exist_ok=True)
-            with open(os.path.join(workdir, "kwargs.json"), "w") as f:
-                json.dump(unstructure(clerk.localize(kwargs, workdir, locator)), f)
-            fn_out = os.path.join(workdir, f"{script}.out")
-            fn_err = os.path.join(workdir, f"{script}.err")
+            local_kwargs = clerk.localize(kwargs, locator, workdir)
+            with open(workdir / "kwargs.json", "w") as f:
+                json.dump(unstructure(local_kwargs), f)
+            dump_hashes(workdir / "kwargs.sha256", compute_hashes(local_kwargs, workdir))
+
+            # Run the job
+            fn_out = workdir / f"{script}.out"
+            fn_err = workdir / f"{script}.err"
             try:
                 with open(fn_out, "w") as fo, open(fn_err, "w") as fe:
                     subprocess.run(
@@ -165,10 +204,29 @@ class Job(MetaFuncBase):
                         check=True,
                     )
             except subprocess.CalledProcessError as exc:
-                with open(fn_err) as f:
-                    sys.stderr.write(f.read())
+                if fn_err.is_file():
+                    with open(fn_err) as f:
+                        sys.stderr.write(f.read())
                 exc.add_note(f"Script {locator} failed: {script}.")
                 raise exc
+
+            # When we got here, the job ran as hoped, and files can be pushed back.
+            clerk.push("kwargs.json", locator, workdir)
+            clerk.push("kwargs.sha256", locator, workdir)
+            clerk.push(script, locator, workdir)
+            clerk.push(f"{script}.out", locator, workdir)
+            clerk.push(f"{script}.err", locator, workdir)
+
+            # There may be some extra files, not explicitly included in the results, worth keeping.
+            fn_extra = workdir / "result.extra"
+            if fn_extra.is_file():
+                with open(fn_extra) as f:
+                    for line in f:
+                        line = strip_line(line)
+                        if len(line) > 0:
+                            clerk.push(line.strip(), locator, workdir)
+                clerk.push("result.extra", locator, workdir)
+
             return True
 
         result = self._in_workdir(run, clerk, locator, kwargs)
@@ -193,15 +251,43 @@ class Job(MetaFuncBase):
             the ones given here. Any inconsistency in inputs implies execution needed.
         """
 
-        def run(workdir):
-            fn_kwargs = os.path.join(workdir, "kwargs.json")
-            if not os.path.isfile(fn_kwargs):
+        def run(workdir: Path) -> bool:
+            # If kwargs absent, so we'll assume the job has never been run before.
+            path_kwargs = workdir / clerk.pull(locator / Path("kwargs.json"), locator, workdir)
+            if not path_kwargs.is_file():
                 return False
-            with open(os.path.join(workdir, "kwargs.json")) as f:
+
+            # If kwargs inconsistent -> rerun
+            with open(path_kwargs) as f:
                 found_kwargs = json.load(f)
-            expected_kwargs = unstructure(clerk.localize(kwargs, workdir, locator))
-            if found_kwargs != expected_kwargs:
-                return False
+            expected_kwargs = clerk.localize(kwargs, locator, workdir)
+            unstruct_kwargs = unstructure(expected_kwargs)
+            if found_kwargs != unstruct_kwargs:
+                with open(workdir / "kwargs-new.json", "w") as f:
+                    json.dump(unstruct_kwargs, f)
+                os.system(f"ls {workdir}")
+                clerk.push("kwargs-new.json", locator, workdir)
+                raise ValueError(
+                    f"Existing kwarg.json in {locator} inconsistent with new kwargs. "
+                    "Added kwargs-new.json for comparison."
+                )
+
+            # If hashes file (even if it should be empty) is missing -> rerun
+            path_sha256 = workdir / clerk.pull(locator / Path("kwargs.sha256"), locator, workdir)
+            if not path_sha256.is_file():
+                raise ValueError(f"File kwarg.sha256 not found in existing {locator}.")
+
+            # If files in kwargs have changes hashes -> rerun
+            found_hashes = load_hashes(path_sha256)
+            expected_hashes = compute_hashes(expected_kwargs, workdir)
+            if found_hashes != expected_hashes:
+                dump_hashes(workdir / "kwargs-new.sha256", expected_hashes)
+                clerk.push("kwargs-new.sha256", locator, workdir)
+                raise ValueError(
+                    f"Existing kwarg.json in {locator} inconsistent with new hashes. "
+                    "Added kwargs-new.sha256 for comparison."
+                )
+
             return True
 
         return self._in_workdir(run, clerk, locator, kwargs)
@@ -212,14 +298,13 @@ class Job(MetaFuncBase):
         """Internal method for running something in a job work directory."""
         result_api = type_api_from_mock(self.result_mock_func(**kwargs))
         with clerk.workdir(locator) as workdir:
-            fn_result = os.path.join(
-                workdir, clerk.localize(locator / Path("result.json"), workdir, locator)
-            )
+            path_result = workdir / clerk.pull(locator / Path("result.json"), locator, workdir)
             success = run(workdir)
-            if success and os.path.exists(fn_result):
-                with open(fn_result) as f:
+            if success and path_result.exists():
+                clerk.push("result.json", locator, workdir)
+                with open(path_result) as f:
                     result = structure("result", json.load(f), result_api)
-                    return clerk.globalize(result, workdir, locator)
+                    return clerk.globalize(result, locator, workdir)
             return NotImplemented
 
     def get_parameters_api(
@@ -257,7 +342,7 @@ class Job(MetaFuncBase):
         return self.resources
 
 
-def structure(prefix, json_data, data_api):
+def structure(prefix: str, json_data: Any, data_api: Any) -> Any:
     """Structure the unstructured data loaded from a JSON file.
 
     Parameters
@@ -295,7 +380,7 @@ def structure(prefix, json_data, data_api):
     return transform_tree(transform, json_data, data_api)
 
 
-def unstructure(data):
+def unstructure(data: Any) -> Any:
     """Unstructure structured data.
 
     This is the inverse of ``structure`` and returns a JSON-able result.
@@ -303,11 +388,54 @@ def unstructure(data):
     return transform_tree(lambda _, leaf: cattrs.unstructure(leaf), data)
 
 
+def compute_hashes(data: Any, workdir: Path) -> dict[str, str]:
+    """Compute SHA256 hashes of all files present in data (nested in lists and dictionaries)."""
+    result = {}
+    for _, leaf in iterate_tree(data):
+        if isinstance(leaf, Path):
+            sha = hashlib.sha256()
+            with open(workdir / leaf, "rb") as f:
+                block = f.read(1048576)
+                if block is None:
+                    break
+                sha.update(block)
+            result[str(leaf)] = sha.hexdigest()
+    return result
+
+
+def dump_hashes(path_sha256: Path, hashes: dict[str, str]):
+    """Write path hashes to file, compatible with sha256sum."""
+    with open(path_sha256, "w") as f:
+        for path, sha in sorted(hashes.items()):
+            f.write(f"{sha}  {path}\n")
+
+
+def load_hashes(path_sha256: Path) -> dict[str, str]:
+    """Load path hashes from file, compatible with sha256sum."""
+    result = {}
+    with open(path_sha256) as f:
+        for line in f:
+            sha = line[:64].lower()
+            path = line[66:].strip()
+            if len(path) == 0 or len(sha) != 64 or any(c not in string.hexdigits for c in sha):
+                raise ValueError(f"Incorrectly formatted checksum line:\n{line[:-1]}")
+            result[path] = sha
+    return result
+
+
+def strip_line(line: str):
+    """Strip comment from line and strip whitespace."""
+    comment_pos = line.find("#")
+    if comment_pos >= 0:
+        line = line[:comment_pos]
+    return line.strip()
+
+
 @attrs.define
 class JobFactory:
     """Convenience class for instantiating new jobs"""
 
-    clerk: ClerkBase = attrs.field()
+    clerk: ClerkBase = attrs.field(default=attrs.Factory(LocalTempClerk))
     script: str = attrs.field(default="run")
     _cache: dict[str, Job] = attrs.field(init=False, default=attrs.Factory(dict))
 
@@ -320,4 +448,4 @@ class JobFactory:
         return Closure(job, [self.clerk, locator, self.script, kwargs])
 
 
-job = JobFactory(LocalClerk())
+job = JobFactory()

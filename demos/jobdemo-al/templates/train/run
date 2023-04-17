@@ -3,3 +3,12 @@
 # Some resources can be activated here before running the Python script.
 
 python3 helper.py
+
+# A fake extra output file to be kept
+echo "important results" > valuable.txt
+
+# List files worth keeping
+echo > result.extra << EOF
+valuable.txt
+helper.py
+EOF

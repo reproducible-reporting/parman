@@ -15,6 +15,7 @@ from concurrent.futures import ProcessPoolExecutor
 
 import parsl
 
+from sweetfuture.clerks.local import LocalClerk
 from sweetfuture.job import job
 from sweetfuture.runners.concurrent import ConcurrentRunner
 from sweetfuture.runners.dry import DryRunner
@@ -32,6 +33,8 @@ def main():
     """Main program."""
     args = parse_args()
     runner = setup_runner(args.framework, args.schedule)
+    if args.in_place:
+        job.clerk = LocalClerk()
     workflow(runner, args.pause)
 
 
@@ -52,6 +55,13 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "-p", "--pause", default=1.0, type=float, help="The time to pause in each job, in seconds."
+    )
+    parser.add_argument(
+        "-i",
+        "--in-place",
+        default=False,
+        action="store_true",
+        help="Run calculations in-place, not in temporary directory.",
     )
     return parser.parse_args()
 

@@ -22,11 +22,10 @@
 import os
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any
+from typing import Generator
 
 import attrs
 
-from ..treeleaf import transform_tree
 from .base import ClerkBase
 
 __all__ = ("LocalClerk",)
@@ -34,23 +33,21 @@ __all__ = ("LocalClerk",)
 
 @attrs.define
 class LocalClerk(ClerkBase):
-    root: str = attrs.field(default="results")
+    """A clerk for calculations taking place in the directory where the workflow data are stored."""
+
+    root: Path = attrs.field(default=Path("results"))
 
     @contextmanager
-    def workdir(self, locator: str):
-        workdir = os.path.join(self.root, locator)
-        if not os.path.exists(workdir):
-            os.makedirs(workdir)
+    def workdir(self, locator: Path | str) -> Generator[Path, None, None]:
+        workdir = self.root / locator
+        workdir.mkdir(parents=True, exist_ok=True)
         yield workdir
 
-    def localize(self, data: Any, jobdir: str, locator: str) -> Any:
-        def transform(_, leaf):
-            # pathlib is still work in progress, so it seems. :(
-            return Path(os.path.relpath(leaf, locator)) if isinstance(leaf, Path) else leaf
+    def pull(self, global_path: Path | str, locator: Path | str, workdir: Path | str) -> Path:
+        assert workdir == self.root / locator
+        # pathlib is still work in progress, so it seems. :(
+        return Path(os.path.relpath(global_path, locator))
 
-        return transform_tree(transform, data)
-
-    def globalize(self, data: Any, jobdir: str, locator: str) -> Any:
-        return transform_tree(
-            lambda _, leaf: locator / leaf if isinstance(leaf, Path) else leaf, data
-        )
+    def push(self, local_path: Path | str, locator: Path | str, workdir: Path | str) -> Path:
+        assert workdir == self.root / locator
+        return Path(locator) / local_path
