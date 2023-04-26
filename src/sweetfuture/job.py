@@ -207,8 +207,7 @@ class Job(MetaFuncBase):
                 if fn_err.is_file():
                     with open(fn_err) as f:
                         sys.stderr.write(f.read())
-                exc.add_note(f"Script {locator} failed: {script}.")
-                raise exc
+                raise RuntimeError(f"Script {locator} failed: {script}.") from exc
 
             # When we got here, the job ran as hoped, and files can be pushed back.
             clerk.push("kwargs.json", locator, workdir)
