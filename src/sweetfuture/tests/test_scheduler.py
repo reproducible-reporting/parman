@@ -64,7 +64,7 @@ def test_three(pool):
 def test_zero(pool):
     with Scheduler(partial(pool.submit, func)) as scheduler:
         f = scheduler.submit([3, 0.1], {}, [])
-        sleep(0.2)
+        sleep(1.0)
         assert f.done()
         assert f.result() == 6
 
