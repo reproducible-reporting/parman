@@ -1,0 +1,20 @@
+#!/usr/bin/env python
+
+from plastic import simulate
+
+
+def main():
+    with open("kwargs.json") as f:
+        kwargs = json.load(f)
+
+    simulate(
+        kwargs["initial"], "plastic.traj", "plastic.json", kwargs["cutoff"],
+        kwargs["temperature"], kwargs["steps"], kwargs["stride"]
+    )
+
+    with open("result.json", "w") as f:
+        json.write("plastic.traj", f)
+
+
+if __name__ == "__main__":
+    main()
