@@ -35,6 +35,8 @@ def main():
     runner = setup_runner(args.framework, args.schedule)
     if args.in_place:
         job.clerk = LocalClerk()
+    if args.queue:
+        job.script = "submit.sh"
     workflow(runner, args.pause)
 
 
@@ -62,6 +64,13 @@ def parse_args() -> argparse.Namespace:
         default=False,
         action="store_true",
         help="Run calculations in-place, not in temporary directory.",
+    )
+    parser.add_argument(
+        "-q",
+        "--queue",
+        default=False,
+        action="store_true",
+        help="Call submit.sh to put the run script on the queue.",
     )
     return parser.parse_args()
 
