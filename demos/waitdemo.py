@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
-"""A simple usage example of sweetfuture.waitfuture.
+"""A simple usage example of parman.waitfuture.
 
 Note: Direct use of WaitGraph by end-users is expected to be marginal.
-It is used extensively by SweetFuture Runners to hide technical complexities.
+It is used extensively by ParMan Runners to hide technical complexities.
 """
 
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from sweetfuture.waitfuture import WaitGraph
+from parman.waitfuture import WaitGraph
 
 
 def func(x, t):

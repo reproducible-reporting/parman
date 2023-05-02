@@ -85,6 +85,7 @@ from ase.io.trajectory import Trajectory
 from ase.md.langevin import Langevin
 from ase.md.velocitydistribution import MaxwellBoltzmannDistribution
 
+# Scaling factor for force constants.
 FC_FACTOR = 5.0 * units.Hartree / units.Bohr**2
 
 
@@ -193,10 +194,10 @@ def main():
 
 def simulate(fn_initial, fn_traj, fn_final, cutoff, temperature, steps, stride):
     """Pythonic interface to the main program."""
-    atoms = ase.io.read(args.initial)
-    atoms.calc = PlasticCalculator(atoms, args.cutoff)
-    MaxwellBoltzmannDistribution(atoms, temperature_K=2 * args.temperature)
-    dyn = Langevin(atoms, 0.5 * units.fs, friction=0.01, temperature_K=args.temperature)
+    atoms = ase.io.read(fn_initial)
+    atoms.calc = PlasticCalculator(atoms, cutoff)
+    MaxwellBoltzmannDistribution(atoms, temperature_K=2 * temperature)
+    dyn = Langevin(atoms, 0.5 * units.fs, friction=0.01, temperature_K=temperature)
 
     def log():
         time = dyn.get_time() / (1000 * units.fs)
@@ -205,17 +206,17 @@ def simulate(fn_initial, fn_traj, fn_final, cutoff, temperature, steps, stride):
         temp = 2 * ekin / (3 * len(atoms) * units.kB)
         etot = epot + ekin
         print(
-            f"Time [ps] = {time:.1f}   Epot [eV] = {epot:.3f}   Ekin [eV] = {ekin:.3f}"
+            f"Time [ps] = {time:.2f}   Epot [eV] = {epot:.3f}   Ekin [eV] = {ekin:.3f}"
             f"   T [K] = {temp:.3f}   Etot [eV] = {etot:.3f}"
         )
 
-    dyn.attach(log, interval=args.stride)
+    dyn.attach(log, interval=stride)
 
-    traj = Trajectory(args.traj, "w", atoms)
+    traj = Trajectory(fn_traj, "w", atoms)
     try:
-        dyn.attach(traj.write, interval=args.stride)
-        dyn.run(args.steps)
-        ase.io.write(args.final, atoms)
+        dyn.attach(traj.write, interval=stride)
+        dyn.run(steps)
+        ase.io.write(fn_final, atoms)
     finally:
         traj.close()
 

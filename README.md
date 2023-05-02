@@ -1,8 +1,8 @@
-# SweetFuture
+# ParMan
 
-At this stage, SweetFuture is a prototype, so expect a rocky road ahead.
+At this stage, ParMan is an experimental project, so expect a rocky road ahead.
 
-The goal of SweetFuture is to extend `concurrent.futures` (and compatible implementations)
+The goal of ParMan is to extend `concurrent.futures` (and compatible implementations)
 with features that facilitate a transparent implementation of workflows.
 
 - `WaitFuture`: a Future subclass that is "finished" after its dependencies have finished.
@@ -14,15 +14,15 @@ with features that facilitate a transparent implementation of workflows.
   - Closures are submitted for (remote) execution, which contain more metadata,
     e.g. about (keyword) arguments and return values, than ordinary functions
     The extra metadata offer several advantages...
-  - A dry run can be carried out to quickly validate the connectivity of steps in workflow
+  - A dry run can be carried out to quickly validate the connectivity of steps in the workflow
     before launching a full scale calculation.
   - Closure arguments may contain futures.
     If `schedule=True` is set, closures are scheduled for later execution
     when not all dependency futures have finished yet.
     (Dependencies are inferred from the arguments and keyword arguments.)
-    Otherwise, the runner will block until all futures have completed.
+    Otherwise, the runner will block until all required futures have completed.
   - Closure return values are instantiated as much as possible,
-    instead of just returning a future.
+    instead of just returning a single future.
     They may contain futures more deeply nested for parts of the return value,
     This makes it easier to submit more closures further down the workflow.
 
@@ -43,12 +43,14 @@ Other useful features:
 
 ### Install
 
-TODO
+```bash
+python -m pip install parman
+```
 
 ### Examples
 
 At this stage, there is no documentation as such.
-If you want to know how to use SweetFuture, check out the [demos](demos/).
+If you want to learn how to use ParMan, check out the [demos](demos/).
 If you want to understand the internals, read the source and the docstrings.
 
 
@@ -56,11 +58,13 @@ If you want to understand the internals, read the source and the docstrings.
 
 - Support for Dask, because:
   1. The Dask `Future` does not subclass from `concurrent.futures.Future`.
-     Supporting dask would imply a lot of extra boilerplate code in SweetFuture.
+     Supporting dask would imply a lot of extra boilerplate code in ParMan.
   2. The Dask `Future` implements only a subset of `concurrent.futures.Future`.
-  3. Dask Distributed has a large memory and time overhead, and it has little advantages over Parsl.
+  3. Dask Distributed has a large memory and time overhead.
 
 
 ## Plans
 
-- Write a better README.
+- Simplify usage.
+- Add more examples.
+- Tutorial.

@@ -11,7 +11,7 @@
 # (Testing is postponed until there is a nicer implementation.)
 
 # The functionality below line 25 would make more sense in a helper script installed along
-# with Sweet Future. It is mostly making up for a missing feature in Slurm, i.e. something
+# with ParMan. It is mostly making up for a missing feature in Slurm, i.e. something
 # similar to the bwait command in the LFS scheduler:
 # https://www.ibm.com/docs/en/spectrum-lsf/10.1.0?topic=reference-bwait
 

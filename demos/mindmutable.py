@@ -6,7 +6,7 @@ these can be changed prior to the actual execution.
 The result seen by the remote function depends on the executor,
 which is generally not what you want.
 
-The SweetFuture runners make a deepcopy of closure arguments, to avoid this point of confusion.
+The ParMan runners make a deepcopy of closure arguments, to avoid this point of confusion.
 The (remotely) executed closure always sees the arguments as they were at the time of submission.
 """
 

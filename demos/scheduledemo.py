@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-"""A simple usage example of sweetfuture.scheduler.
+"""A simple usage example of parman.scheduler.
 
-Note: SweetFuture Runner classes hide most of the technical complexity seen in this example.
+Note: ParMan Runner classes hide most of the technical complexity seen in this example.
 """
 
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from sweetfuture.scheduler import Scheduler
+from parman.scheduler import Scheduler
 
 
 def func(x, t):

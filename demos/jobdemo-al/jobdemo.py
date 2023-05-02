@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""SweetFuture demo with job scripts.
+"""ParMan demo with job scripts.
 
 This example mimics a simple active learning workflow.
 All jobs are bash or python scripts with some silly IO and a sleep call.
@@ -15,12 +15,12 @@ from concurrent.futures import ProcessPoolExecutor
 
 import parsl
 
-from sweetfuture.clerks.local import LocalClerk
-from sweetfuture.job import job
-from sweetfuture.runners.concurrent import ConcurrentRunner
-from sweetfuture.runners.dry import DryRunner
-from sweetfuture.runners.parsl import ParslRunner
-from sweetfuture.runners.serial import SerialRunner
+from parman.clerks.local import LocalClerk
+from parman.job import job
+from parman.runners.concurrent import ConcurrentRunner
+from parman.runners.dry import DryRunner
+from parman.runners.parsl import ParslRunner
+from parman.runners.serial import SerialRunner
 
 BOOT_SIZE = 15
 SAMPLE_SIZE = 15
@@ -42,7 +42,7 @@ def main():
 
 def parse_args() -> argparse.Namespace:
     """Parse the command-line arguments."""
-    parser = argparse.ArgumentParser("SweetFuture demo with job scripts")
+    parser = argparse.ArgumentParser("ParMan demo with job scripts")
     parser.add_argument(
         "framework",
         help="The framework to execute the workflow",
@@ -53,7 +53,7 @@ def parse_args() -> argparse.Namespace:
         "--schedule",
         default=False,
         action="store_true",
-        help="Enable the SweetFuture scheduler, not relevant for serial and dry.",
+        help="Enable the ParMan scheduler, not relevant for serial and dry.",
     )
     parser.add_argument(
         "-p", "--pause", default=1.0, type=float, help="The time to pause in each job, in seconds."

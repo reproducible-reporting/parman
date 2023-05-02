@@ -1,14 +1,14 @@
-# SweetFuture enables transparent parallelization.
+# ParMan extends Python concurrent.futures to facilitate parallel workflows.
 # Copyright (C) 2023 Toon Verstraelen
 #
-# This file is part of SweetFuture.
+# This file is part of ParMan.
 #
-# SweetFuture is free software; you can redistribute it and/or
+# ParMan is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
 # as published by the Free Software Foundation; either version 3
 # of the License, or (at your option) any later version.
 #
-# SweetFuture is distributed in the hope that it will be useful,
+# ParMan is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
@@ -83,7 +83,7 @@ def test_jobdemo(framework: str, schedule: bool, in_place: bool, tmppath: Path):
 
 
 def check_files(root, fn_sha):
-    with importlib.resources.files("sweetfuture.tests").joinpath(fn_sha).open("r") as f:
+    with importlib.resources.files("parman.tests").joinpath(fn_sha).open("r") as f:
         for line in f:
             sha256, path = line.split()
             check_hash(sha256, root / path)
