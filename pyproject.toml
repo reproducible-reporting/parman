@@ -27,3 +27,7 @@ dependencies = ["attrs", "cattrs", "pytest"]
 Issues = "https://github.com/reproducible-reporting/parman/issues"
 Source = "https://github.com/reproducible-reporting/parman/"
 Changelog = "https://github.com/reproducible-reporting/parman/blob/main/CHANGELOG.md"
+
+
+[project.scripts]
+parman-sbatch-wait = "parman.scripts.sbatch_wait:main"
