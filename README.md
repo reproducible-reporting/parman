@@ -1,4 +1,4 @@
-# ParMan
+# Parman
 
 At this stage, ParMan is an experimental project, so expect a rocky road ahead.
 

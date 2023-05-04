@@ -1,4 +1,4 @@
-# ParMan extends Python concurrent.futures to facilitate parallel workflows.
+# Parman extends Python concurrent.futures to facilitate parallel workflows.
 # Copyright (C) 2023 Toon Verstraelen
 #
 # This file is part of ParMan.

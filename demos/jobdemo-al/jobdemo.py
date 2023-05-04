@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""ParMan demo with job scripts.
+"""Parman demo with job scripts.
 
 This example mimics a simple active learning workflow.
 All jobs are bash or python scripts with some silly IO and a sleep call.
