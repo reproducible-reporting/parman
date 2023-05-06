@@ -49,7 +49,13 @@ import cattrs
 
 from .treeleaf import iterate_tree, transform_tree
 
-__all__ = ("MetaFuncBase", "validate", "type_api_from_signature", "type_api_from_mock")
+__all__ = (
+    "MetaFuncBase",
+    "validate",
+    "type_api_from_signature",
+    "type_api_from_mock",
+    "MinimalMetaFunc",
+)
 
 
 @attrs.define
@@ -79,6 +85,9 @@ class MetaFuncBase:
         """The method to be submitted to an executor."""
         raise NotImplementedError
 
+    def get_signature(self):
+        return inspect.signature(self.__call__)
+
     def cached_result(self, *args, **kwargs) -> Any:
         """Return a cached result in case recomputation can be avoided.
 
@@ -100,7 +109,7 @@ class MetaFuncBase:
             A dictionary mapping each argument name to an API specification.
             See module docstring for details on the API spec.
         """
-        return type_api_from_signature(inspect.signature(self.__call__))
+        return type_api_from_signature(self.get_signature())
 
     def get_result_mock(self, *args, **kwargs) -> Any:
         """A method returning API of the result, in the form of a mock.
@@ -150,17 +159,24 @@ def validate(prefix, data, type_api):
         When a type error is encountered in the data.
     """
     for mulidx, (leaf, leaf_type) in iterate_tree(data, type_api):
-        # Use cattrs magic to check the type
-        if not isinstance(leaf_type, (type, types.GenericAlias)):
+        if isinstance(leaf_type, type):
+            # Standard Python type check
+            if not isinstance(leaf, leaf_type):
+                raise TypeError(f"{prefix} at {mulidx} is not of type {leaf_type}")
+        elif isinstance(leaf_type, types.GenericAlias):
+            # Use cattrs magic to check the type
+            try:
+                cattrs.structure(leaf, leaf_type)
+            except cattrs.IterableValidationError as exc:
+                raise TypeError(
+                    f"{prefix} at {mulidx}: {leaf} does not conform {leaf_type}"
+                ) from exc
+            except cattrs.StructureHandlerNotFoundError as exc:
+                raise TypeError(
+                    f"{prefix} at {mulidx}: type {leaf_type} cannot be instantiated"
+                ) from exc
+        else:
             raise TypeError(f"{prefix} at {mulidx}: cannot type-check {leaf} with {leaf_type}")
-        try:
-            cattrs.structure(leaf, leaf_type)
-        except cattrs.IterableValidationError as exc:
-            raise TypeError(f"{prefix} at {mulidx}: {leaf} does not conform {leaf_type}") from exc
-        except cattrs.StructureHandlerNotFoundError as exc:
-            raise TypeError(
-                f"{prefix} at {mulidx}: type {leaf_type} cannot be instantiated"
-            ) from exc
 
 
 def type_api_from_signature(signature):
@@ -188,3 +204,39 @@ def type_api_from_mock(mock_api):
         return type(mock_leaf)
 
     return transform_tree(transform, mock_api)
+
+
+@attrs.define
+class MinimalMetaFunc(MetaFuncBase):
+    """A bare-bones implementation of MetaFuncBase without caching."""
+
+    function: callable = attrs.field()
+    mock: callable = attrs.field(default=None)
+
+    def describe(self, *args, **kwargs) -> str:
+        """Describe this metafunc."""
+        return self.function.__name__
+
+    def __call__(self, *args, **kwargs) -> Any:
+        """The method to be submitted to an executor."""
+        return self.function(*args, **kwargs)
+
+    def get_signature(self) -> inspect.Signature:
+        """Return a signature of __call__, used for type checking."""
+        return inspect.signature(self.function)
+
+    def get_result_mock(self, *args, **kwargs) -> Any:
+        """A method returning API of the result, in the form of a mock.
+
+        There is no default behavior to derive this from the __call__ signature,
+        because the return value must be a mock example consistent with the parameters.
+
+        Returns
+        -------
+        result_api
+            An API specification for the result.
+            See module docstring for details on the API spec.
+        """
+        if self.mock is None:
+            return object()
+        return self.mock(*args, **kwargs)

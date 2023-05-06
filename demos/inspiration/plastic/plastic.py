@@ -227,10 +227,26 @@ def parse_args():
     parser.add_argument("initial", help="The initial structure")
     parser.add_argument("traj", help="The output trajectory")
     parser.add_argument("final", help="The final structure")
-    parser.add_argument("-c", "--cutoff", default=2.5, type=float)
-    parser.add_argument("-t", "--temperature", default=300, type=int)
-    parser.add_argument("-n", "--steps", default=10000, type=int)
-    parser.add_argument("-s", "--stride", default=100, type=int)
+    parser.add_argument(
+        "-c", "--cutoff", default=2.5, type=float, help="Bond cutoff radius. default=%(default)s"
+    )
+    parser.add_argument(
+        "-t",
+        "--temperature",
+        default=300.0,
+        type=float,
+        help="Langevin MD temperature. default=%(default)s",
+    )
+    parser.add_argument(
+        "-n", "--steps", default=10000, type=int, help="Number of MD steps. default=%(default)s"
+    )
+    parser.add_argument(
+        "-s",
+        "--stride",
+        default=100,
+        type=int,
+        help="Stride between trajectory snapshots. default=%(default)s",
+    )
     return parser.parse_args()
 
 

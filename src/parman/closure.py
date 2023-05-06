@@ -66,7 +66,7 @@ class Closure:
 
     def get_parameters(self) -> dict[str, Any]:
         """Return a dictionary with all parameters (including positional ones)."""
-        signature = inspect.signature(self.metafunc.__call__)
+        signature = self.metafunc.get_signature()
         bound_arguments = signature.bind(*self.args, **self.kwargs)
         bound_arguments.apply_defaults()
         return dict(bound_arguments.arguments)
