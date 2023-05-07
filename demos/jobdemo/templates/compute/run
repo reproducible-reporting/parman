@@ -7,6 +7,7 @@ PAUSE=$(python -c 'import json; print(json.load(open("kwargs.json"))["pause"])')
 # FN_CONFIG=$(jq -r .config kwargs.json)
 # FN_CONFIG=$(gojq -r .config kwargs.json)
 # FN_CONFIG=$(jql -r '."config"' kwargs.json)
+# Note that the -r option is needed to get rid of JSON string quotes.
 
 echo "Computing some result"
 echo "Did something with ${FN_CONFIG}" > computation.out

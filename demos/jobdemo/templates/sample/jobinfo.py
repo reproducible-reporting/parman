@@ -1,4 +1,4 @@
-"""API and resource defintions."""
+"""API and resource definitions."""
 
 from pathlib import Path
 
