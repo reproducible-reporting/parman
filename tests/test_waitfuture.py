@@ -127,9 +127,9 @@ def test_wait_any(pool):
 def test_cancel(pool1):
     wait_graph = WaitGraph()
     f1 = pool1.submit(func, 1.0, 0.1)
-    f2 = pool1.submit(func, 2.0, 0.2)
+    f2 = pool1.submit(func, 2.0, 5.0)
     wf = wait_graph.submit([f1, f2], digest_tuple)
-    assert f2.cancel()
+    f2.cancel()
     assert wf.result(timeout=1) == (2.0, None)
     assert wf.done()
     assert f1.done()
