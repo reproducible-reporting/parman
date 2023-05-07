@@ -1,3 +1,8 @@
+[![pytest](https://github.com/reproducible-reporting/parman/actions/workflows/pytest.yaml/badge.svg)](https://github.com/reproducible-reporting/parman/actions/workflows/pytest.yaml)
+[![PyPI Build](https://github.com/reproducible-reporting/parman/actions/workflows/pypi.yaml/badge.svg)](https://github.com/reproducible-reporting/parman/actions/workflows/pypi.yaml)
+[![PyPI Version](https://img.shields.io/pypi/v/parman)](https://pypi.org/project/ParMan/)
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/parman)
+
 # Parman
 
 At this stage, ParMan is an experimental project, so expect a rocky road ahead.
