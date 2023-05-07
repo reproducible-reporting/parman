@@ -46,19 +46,23 @@ cattrs.register_structure_hook_func(
 
 def main():
     """The Main program."""
-    use_parman = parse_args()
-    demc(use_parman)
+    args = parse_args()
+    demc(args.parman, args.maxeval, args.burnin)
 
 
 def parse_args():
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser("DEMC Demo")
+    parser.add_argument("maxeval", default=100000, type=int, help="Maximum function evaluations.")
+    parser.add_argument(
+        "burnin", default=500, type=int, help="Number of recorded iterations to discard."
+    )
     parser.add_argument("-p", "--parman", default=False, action="store_true")
     args = parser.parse_args()
-    return args.parman
+    return args
 
 
-def demc(use_parman: bool = True):
+def demc(use_parman: bool, maxeval: int, burnin: int):
     """Demonstrate DEMC.
 
     Parameters
@@ -91,7 +95,7 @@ def demc(use_parman: bool = True):
     trajs_lp = [[] for _ in range(nwalker)]
     num_eval = 0
     iouter = 0
-    while num_eval < 100000:
+    while num_eval < maxeval:
         stride = int(10 * 2 ** (iouter / 200))
         new_points = []
         for i0, history0 in enumerate(histories):
@@ -113,7 +117,6 @@ def demc(use_parman: bool = True):
         iouter += 1
 
     # Analysis
-    burnin = 500
     for iwalker, (traj_par, traj_lp) in enumerate(zip(trajs_par, trajs_lp, strict=True)):
         my_plot_traj(f"demc_traj_{iwalker}.png", burnin, traj_par, traj_lp)
     my_analyse_traj(burnin, trajs_par, dm, xs, ev, eps)

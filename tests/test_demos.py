@@ -36,7 +36,7 @@ def test_linreg(tmppath: Path):
 
 def test_naivemc(tmppath: Path):
     run_script(
-        ["python3", "naivemc.py"],
+        ["python3", "naivemc.py", "1000", "10"],
         Path("demos/demc"),
         [Path("linreg.py"), Path("naivemc.py")],
         tmppath,
@@ -45,7 +45,7 @@ def test_naivemc(tmppath: Path):
 
 def test_demc_serial(tmppath: Path):
     run_script(
-        ["python3", "demc.py"],
+        ["python3", "demc.py", "1000", "10"],
         Path("demos/demc"),
         [Path("linreg.py"), Path("naivemc.py"), Path("demc.py")],
         tmppath,
@@ -54,7 +54,7 @@ def test_demc_serial(tmppath: Path):
 
 def test_demc_parman(tmppath: Path):
     run_script(
-        ["python3", "demc.py", "--parman"],
+        ["python3", "demc.py", "1000", "10", "--parman"],
         Path("demos/demc"),
         [Path("linreg.py"), Path("naivemc.py"), Path("demc.py")],
         tmppath,

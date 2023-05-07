@@ -21,6 +21,7 @@
 """Naive Monte Carlo solver for the ill-conditioned regression problem."""
 
 
+import argparse
 from collections.abc import Callable
 
 import attrs
@@ -47,6 +48,23 @@ class LogPosterior:
 
 
 def main():
+    """The Main program."""
+    args = parse_args()
+    naivemc(args.maxeval, args.burnin)
+
+
+def parse_args():
+    """Parse command-line arguments."""
+    parser = argparse.ArgumentParser("DEMC Demo")
+    parser.add_argument("maxeval", default=100000, type=int, help="Maximum function evaluations.")
+    parser.add_argument(
+        "burnin", default=500, type=int, help="Number of recorded iterations to discard."
+    )
+    args = parser.parse_args()
+    return args
+
+
+def naivemc(maxeval: int, burnin: int):
     """The main program."""
     # Problem definition
     eps = 0.1
@@ -56,10 +74,9 @@ def main():
     pars_init = np.zeros(dm.shape[1])
 
     # Sampling
-    traj_pars, traj_lp = mc_chain(pars_init, logp, rng, 100000, 50)
+    traj_pars, traj_lp = mc_chain(pars_init, logp, rng, maxeval, 50)
 
     # Trajectory
-    burnin = 50
     plot_traj("naivemc_traj.png", burnin, traj_pars, traj_lp)
 
     # Average parameters and uncertainty
