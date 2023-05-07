@@ -14,7 +14,7 @@ import argparse
 from concurrent.futures import ProcessPoolExecutor
 
 import parsl
-from parman.clerks.local import LocalClerk
+from parman.clerks.localtemp import LocalTempClerk
 from parman.job import job
 from parman.runners.concurrent import ConcurrentRunner
 from parman.runners.dry import DryRunner
@@ -32,8 +32,8 @@ def main():
     """Main program."""
     args = parse_args()
     runner = setup_runner(args.framework, args.schedule)
-    if args.in_place:
-        job.clerk = LocalClerk()
+    if args.in_temp:
+        job.clerk = LocalTempClerk()
     if args.queue:
         job.script = "submit.sh"
     workflow(runner, args.pause)
@@ -58,11 +58,11 @@ def parse_args() -> argparse.Namespace:
         "-p", "--pause", default=1.0, type=float, help="The time to pause in each job, in seconds."
     )
     parser.add_argument(
-        "-i",
-        "--in-place",
+        "-t",
+        "--in-temp",
         default=False,
         action="store_true",
-        help="Run calculations in-place, not in temporary directory.",
+        help="Run calculations in a temporary directory.",
     )
     parser.add_argument(
         "-q",

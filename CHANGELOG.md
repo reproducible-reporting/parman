@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed a Python-3.10 specific bug. (thanks to tox)
 - Minimal Python version set to 3.10, for modern type hinting support.
 
+### Changed
+
+- Use `LocalClerk` as default, as it is the most logical first step when setting up a workflow.
+
 ## [0.1.0] - 2023-05-02
 
 Initial public release. See `README.md` for some preliminary details.

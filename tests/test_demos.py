@@ -62,7 +62,7 @@ def test_demc_parman(tmppath: Path):
 
 
 @pytest.mark.parametrize(
-    "framework, schedule, in_place",
+    "framework, schedule, in_temp",
     [
         ("dry", False, False),
         ("serial", False, False),
@@ -81,12 +81,12 @@ def test_demc_parman(tmppath: Path):
         ("parsl-local", True, True),
     ],
 )
-def test_jobdemo(framework: str, schedule: bool, in_place: bool, tmppath: Path):
+def test_jobdemo(framework: str, schedule: bool, in_temp: bool, tmppath: Path):
     args = ["python3", "jobdemo.py", framework, "--pause=0"]
     if schedule:
         args.append("-s")
-    if in_place:
-        args.append("-i")
+    if in_temp:
+        args.append("-t")
 
     relpaths = [
         Path("jobdemo.py"),

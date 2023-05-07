@@ -74,7 +74,7 @@ import attrs
 import cattrs
 
 from .clerks.base import ClerkBase
-from .clerks.localtemp import LocalTempClerk
+from .clerks.local import LocalClerk
 from .closure import Closure
 from .metafunc import MetaFuncBase, type_api_from_mock, type_api_from_signature
 from .treeleaf import iterate_tree, transform_tree
@@ -434,7 +434,7 @@ def strip_line(line: str):
 class JobFactory:
     """Convenience class for instantiating new jobs"""
 
-    clerk: ClerkBase = attrs.field(default=attrs.Factory(LocalTempClerk))
+    clerk: ClerkBase = attrs.field(default=attrs.Factory(LocalClerk))
     script: str = attrs.field(default="run")
     _cache: dict[str, Job] = attrs.field(init=False, default=attrs.Factory(dict))
 
