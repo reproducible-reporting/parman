@@ -21,8 +21,7 @@
 
 
 import pytest
-
-from ..treeleaf import get_tree, iterate_tree, same, transform_tree
+from parman.treeleaf import get_tree, iterate_tree, same, transform_tree
 
 
 @pytest.mark.parametrize(

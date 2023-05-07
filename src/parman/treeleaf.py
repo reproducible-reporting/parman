@@ -33,8 +33,8 @@ be recursed into.
 """
 
 
-from collections.abc import Iterator
-from typing import Any, Generator
+from collections.abc import Generator, Iterator
+from typing import Any
 
 __all__ = ("get_tree", "iterate_tree", "transform_tree", "same")
 
@@ -89,15 +89,15 @@ def iterate_tree(*trees: Any) -> Generator[tuple[tuple, Any], None, None]:
     handled = False
     if same(type(tree) for tree in trees):
         if isinstance(trees[0], list) and same(len(tree) for tree in trees):
-            for intidx, items in enumerate(zip(*trees)):
+            for intidx, items in enumerate(zip(*trees, strict=True)):
                 for subidx, subtrees in iterate_tree(*items):
-                    yield (intidx,) + subidx, subtrees
+                    yield (intidx, *subidx), subtrees
             handled = True
         elif isinstance(trees[0], dict) and same(set(tree.keys()) for tree in trees):
             for keyidx in trees[0].keys():
                 items = [tree[keyidx] for tree in trees]
                 for subidx, subtrees in iterate_tree(*items):
-                    yield (keyidx,) + subidx, subtrees
+                    yield (keyidx, *subidx), subtrees
             handled = True
     if not handled:
         if len(trees) == 1:
@@ -132,13 +132,13 @@ def transform_tree(transform: callable, *trees: Any, _mulidx: tuple = ()) -> Any
     if same(type(tree) for tree in trees):
         if isinstance(trees[0], list) and same(len(tree) for tree in trees):
             result = []
-            for intidx, items in enumerate(zip(*trees)):
-                result.append(transform_tree(transform, *items, _mulidx=_mulidx + (intidx,)))
+            for intidx, items in enumerate(zip(*trees, strict=True)):
+                result.append(transform_tree(transform, *items, _mulidx=(*_mulidx, intidx)))
             return result
         if isinstance(trees[0], dict) and same(set(tree.keys()) for tree in trees):
             result = {}
             for keyidx in trees[0].keys():
                 items = [tree[keyidx] for tree in trees]
-                result[keyidx] = transform_tree(transform, *items, _mulidx=_mulidx + (keyidx,))
+                result[keyidx] = transform_tree(transform, *items, _mulidx=(*_mulidx, keyidx))
             return result
     return transform(_mulidx, *trees)

@@ -19,7 +19,6 @@
 # --
 """Bundled information for a function to be submitted."""
 
-import inspect
 from concurrent.futures import Future
 from copy import deepcopy
 from typing import Any

@@ -33,7 +33,6 @@ import linreg
 import naivemc
 import numpy as np
 from numpy.typing import NDArray
-
 from parman.runners.concurrent import ConcurrentRunner
 from parman.wrapper import wrap
 
@@ -106,7 +105,7 @@ def demc(use_parman: bool = True):
             trajs_lp[i0].append(lp)
             new_points.append(par)
             num_eval += stride
-        for new_point, history in zip(new_points, histories):
+        for new_point, history in zip(new_points, histories, strict=True):
             history.append(new_point)
             if len(history) > 100:
                 del history[0]
@@ -115,7 +114,7 @@ def demc(use_parman: bool = True):
 
     # Analysis
     burnin = 500
-    for iwalker, (traj_par, traj_lp) in enumerate(zip(trajs_par, trajs_lp)):
+    for iwalker, (traj_par, traj_lp) in enumerate(zip(trajs_par, trajs_lp, strict=True)):
         my_plot_traj(f"demc_traj_{iwalker}.png", burnin, traj_par, traj_lp)
     my_analyse_traj(burnin, trajs_par, dm, xs, ev, eps)
 
@@ -167,7 +166,7 @@ def mc_chain(
     rng = np.random.default_rng(seed)
     lpa = logp(xa)
     gamma = 2.38 / np.sqrt(2 * len(xa))
-    for imc in range(numiter):
+    for _imc in range(numiter):
         delta = rng.normal(0, len(xa) ** -0.5, xa.shape)
         delta *= 0.02 / rng.normal(0, 1)
         if len(xs_other) > 0:

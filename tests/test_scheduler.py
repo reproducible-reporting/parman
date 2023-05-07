@@ -25,8 +25,7 @@ from functools import partial
 from time import sleep
 
 import pytest
-
-from ..scheduler import Scheduler
+from parman.scheduler import Scheduler
 
 
 def func(x, t):
@@ -143,7 +142,7 @@ def test_larger(seed, max_workers, Executor, size, end):
             return pool.submit(func, x, t)
 
         with Scheduler(user_submit) as scheduler:
-            for i in range(size):
+            for _i in range(size):
                 step = random.randrange(1, 10)
                 offset = random.randrange(size)
                 delay = random.uniform(0.001, 0.010)
@@ -151,7 +150,7 @@ def test_larger(seed, max_workers, Executor, size, end):
                 futures.append(scheduler.submit([dependencies, delay], {}, dependencies))
                 expected.append(2 * sum(expected[offset::step]))
 
-        pairs = list(zip(futures, expected))
+        pairs = list(zip(futures, expected, strict=True))
         if end == "reverse":
             pairs = pairs[::-1]
         elif end == "wait":

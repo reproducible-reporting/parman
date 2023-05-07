@@ -21,7 +21,6 @@
 
 
 import hashlib
-import importlib.resources
 import os
 import runpy
 import shutil
@@ -105,7 +104,7 @@ def test_jobdemo(framework: str, schedule: bool, in_place: bool, tmppath: Path):
     # Run the jobdemo in a subprocess. (runpy does not work with parsl.)
     run_script(args, Path("demos/jobdemo-al"), relpaths, tmppath)
     if framework != "dry":
-        check_files(tmppath, "jobdemo-al-results.sha256")
+        check_files(tmppath, "tests/jobdemo-al-results.sha256")
 
 
 def test_plastic_ibuprofen(tmppath: Path):
@@ -154,7 +153,7 @@ def run_script(args: list[str], root: Path, relpaths: list[Path], tmppath: Path,
 
 
 def check_files(root, fn_sha):
-    with importlib.resources.files("parman.tests").joinpath(fn_sha).open("r") as f:
+    with open(fn_sha) as f:
         for line in f:
             sha256, path = line.split()
             check_hash(sha256, root / path)

@@ -37,7 +37,7 @@ Anharmonic Fues pair potential:
 
 @article{Parr1967,
     author = {Parr, Robert G. and Borkman, Raymond F.},
-    title = {Chemical Binding and Potential‐Energy Functions for Molecules},
+    title = {Chemical Binding and Potential-Energy Functions for Molecules},
     journal = {The Journal of Chemical Physics},
     volume = {46},
     number = {9},

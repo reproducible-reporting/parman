@@ -217,11 +217,10 @@ def wait_for_status(jobid: int, cluster: str | None) -> str | None:
         match = re.search(r"JobState=(?P<state>[A-Z]+)", cp.stdout)
         if match is not None:
             return match.group("state")
-    else:
+    elif "Invalid job id specified" in cp.stderr:
         # If the jobid is unknown, it is assumed that the job
         # has long gone and has completed.
-        if "Invalid job id specified" in cp.stderr:
-            return "Invalid"
+        return "Invalid"
     return None
 
 

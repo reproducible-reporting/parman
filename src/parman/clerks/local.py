@@ -20,9 +20,9 @@
 """Local to global mapping for in-tree calculations."""
 
 import os
+from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Generator
 
 import attrs
 

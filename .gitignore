@@ -3,6 +3,9 @@ __pycache__
 dist
 build
 .pytest_cache
+.coverage
+.ruff_cache
 env
 tmp
 .envrc
+src/parman/_version.py

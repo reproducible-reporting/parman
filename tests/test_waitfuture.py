@@ -30,8 +30,7 @@ from concurrent.futures import (
 from time import sleep
 
 import pytest
-
-from ..waitfuture import WaitGraph
+from parman.waitfuture import WaitGraph
 
 
 def func(x, t):
@@ -181,12 +180,12 @@ def test_larger(seed, max_workers, Executor, size, end):
     with Executor(max_workers) as pool:
         futures = [pool.submit(func, i, random.uniform(0.001, 0.010)) for i in range(size)]
         expected = [2 * i for i in range(size)]
-        for i in range(size):
+        for _i in range(size):
             step = random.randrange(1, 10)
             offset = random.randrange(size)
             futures.append(wait_graph.submit(futures[offset::step], digest))
             expected.append(digest(*expected[offset::step]))
-        pairs = list(zip(futures, expected))
+        pairs = list(zip(futures, expected, strict=True))
         if end == "reverse":
             pairs = pairs[::-1]
         elif end == "wait":

@@ -19,9 +19,10 @@
 # --
 """Base class for mapping between local and global file structure."""
 
+from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Generator
+from typing import Any
 
 import attrs
 
