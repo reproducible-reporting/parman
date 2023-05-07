@@ -1,4 +1,4 @@
-name: CI
+name: pytest
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
 
 jobs:
   tests:
-    name: "Python ${{ matrix.python-version }}"
+    name: "Python ${{ matrix.py }}"
     runs-on: "ubuntu-latest"
 
     strategy:
