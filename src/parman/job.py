@@ -131,7 +131,7 @@ class Job(MetaFuncBase):
         self.result_mock_func = ns["get_result_mock"]
 
     @classmethod
-    def from_template(cls, template: str):
+    def from_template(cls, template: str) -> "Job":
         """Initialize a job script from a template directory.
 
         Parameters
@@ -438,7 +438,7 @@ class JobFactory:
     script: str = attrs.field(default="run")
     _cache: dict[str, Job] = attrs.field(init=False, default=attrs.Factory(dict))
 
-    def __call__(self, template, locator, **kwargs):
+    def __call__(self, template: str, locator: str, **kwargs) -> Closure:
         """Create a new job with the locator and keyword arguments."""
         job = self._cache.get(template)
         if job is None:
