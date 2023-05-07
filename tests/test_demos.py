@@ -102,9 +102,9 @@ def test_jobdemo(framework: str, schedule: bool, in_temp: bool, tmppath: Path):
     ]
 
     # Run the jobdemo in a subprocess. (runpy does not work with parsl.)
-    run_script(args, Path("demos/jobdemo-al"), relpaths, tmppath)
+    run_script(args, Path("demos/jobdemo"), relpaths, tmppath)
     if framework != "dry":
-        check_files(tmppath, "tests/jobdemo-al-results.sha256")
+        check_files(tmppath, "tests/jobdemo-results.sha256")
 
 
 def test_plastic_ibuprofen(tmppath: Path):
