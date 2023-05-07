@@ -53,7 +53,7 @@ import os
 
 
 def main():
-    assert "PARMAN_ROOT" in os.environ
+    assert "PARMAN_WORKDIR" in os.environ
     with open("result.json", "w") as f:
         json.dump({
             "aaaa": os.environ.get("PARMAN_TEST_JOB_AAAA", "wrong_a"),
