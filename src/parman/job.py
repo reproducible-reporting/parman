@@ -33,7 +33,7 @@ workflow (after other running jobs have completed).
 
 The ``jobinfo.py`` can specify three things:
 
-1) ``get_result_mock`` is mandatory.
+1) ``mock`` is mandatory.
    This is a function mimicking the Python interface to the job script.
    The arguments must have type hints to infer the API.
    The result must be a "mocked" result with the correct types of the return values.
@@ -42,8 +42,8 @@ The ``jobinfo.py`` can specify three things:
    Python ``pathlib`` module.
 2) ``resources`` is optional. This is a dictionary specifying resources, which are specific to
    the runner used. Currently, this is only used by the ParslRunner.
-3) ``get_parameter_api`` is optional.
-   This function takes the same arguments as ``get_result_mock`` and can be used to return
+3) ``parameters`` is optional.
+   This function takes the same arguments as ``mock`` and can be used to return
    a more detailed parameters API than what is possible with type hints.
    It can also be useful when the parameters API depends on values in the parameters,
    although this seems to be a rather exotic scenario.
@@ -109,8 +109,8 @@ class Job(MetaFuncBase):
     template: Path = attrs.field()
     jobinfo_source: str = attrs.field()
     resources: dict[str, Any] = attrs.field(init=False)
-    parameters_api_func: callable = attrs.field(init=False)
-    result_mock_func: callable = attrs.field(init=False)
+    parameters_func: callable = attrs.field(init=False)
+    mock_func: callable = attrs.field(init=False)
 
     def __getstate__(self):
         """Return state for pickle"""
@@ -127,8 +127,8 @@ class Job(MetaFuncBase):
         ns = {}
         exec(self.jobinfo_source, ns)
         self.resources = ns.get("resources", {})
-        self.parameters_api_func = ns.get("get_parameter_api")
-        self.result_mock_func = ns["get_result_mock"]
+        self.parameters_func = ns.get("parameters")
+        self.mock_func = ns["mock"]
 
     @classmethod
     def from_template(cls, template: str) -> "Job":
@@ -295,7 +295,7 @@ class Job(MetaFuncBase):
         self, run: callable, clerk: ClerkBase, locator: str, kwargs: dict[str, Any]
     ) -> dict[str, Any]:
         """Internal method for running something in a job work directory."""
-        result_api = type_api_from_mock(self.result_mock_func(**kwargs))
+        result_api = type_api_from_mock(self.mock_func(**kwargs))
         with clerk.workdir(locator) as workdir:
             path_result = workdir / clerk.pull(locator / Path("result.json"), locator, workdir)
             success = run(workdir)
@@ -314,12 +314,10 @@ class Job(MetaFuncBase):
         See ``__call__`` method for parameter documentation.
         """
         parameters_api = MetaFuncBase.get_parameters_api(self)
-        if self.parameters_api_func is None:
-            parameters_api["kwargs"] = type_api_from_signature(
-                inspect.signature(self.result_mock_func)
-            )
+        if self.parameters_func is None:
+            parameters_api["kwargs"] = type_api_from_signature(inspect.signature(self.mock_func))
         else:
-            parameters_api["kwargs"] = self.parameters_api_func(**kwargs)
+            parameters_api["kwargs"] = self.parameters_func(**kwargs)
         return parameters_api
 
     def get_result_mock(
@@ -329,7 +327,7 @@ class Job(MetaFuncBase):
 
         See ``__call__`` method for parameter documentation.
         """
-        return self.result_mock_func(**kwargs)
+        return self.mock_func(**kwargs)
 
     def get_resources(
         self, clerk: ClerkBase, locator: str, script: str, kwargs: dict[str, Any]
@@ -342,7 +340,7 @@ class Job(MetaFuncBase):
 
     def get_defaults(self):
         """Get the default keyword arguments specified in the jobinfo file."""
-        signature = inspect.signature(self.result_mock_func)
+        signature = inspect.signature(self.mock_func)
         defaults = {}
         for name, parameter in signature.parameters.items():
             default = parameter.default

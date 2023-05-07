@@ -3,7 +3,7 @@
 from pathlib import Path
 
 
-def get_result_mock(pause: float, config: Path):
+def mock(pause: float, config: Path):
     return Path("__computed__")
 
 

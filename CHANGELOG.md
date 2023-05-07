@@ -21,6 +21,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Use `LocalClerk` as default, as it is the most logical first step when setting up a workflow.
+- API change: names changed in `jobinfo.py`:
+  - `get_result_mock` -> `mock`
+  - `get_parameters_api` -> `parameters`
 
 ## [0.1.0] - 2023-05-02
 

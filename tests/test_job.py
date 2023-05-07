@@ -40,7 +40,7 @@ def setup_jobfactory(root: Path, jobinfo: str, run: str) -> JobFactory:
 
 
 ENVVAR_JOBINFO = """
-def get_result_mock() -> str:
+def mock() -> str:
     return "mock"
 """
 
@@ -70,7 +70,7 @@ def test_envvar(tmppath: Path):
 
 
 OPTIONAL_JOBINFO = """
-def get_result_mock(first: int, second: int = 2) -> int:
+def mock(first: int, second: int = 2) -> int:
     return 42
 """
 
