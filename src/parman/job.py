@@ -62,6 +62,7 @@ import hashlib
 import inspect
 import json
 import os
+import re
 import shutil
 import string
 import subprocess
@@ -147,14 +148,28 @@ class Job(MetaFuncBase):
             jobinfo_source = f.read()
         return cls(template, jobinfo_source)
 
-    def describe(self, clerk: ClerkBase, locator: str, script: str, kwargs: dict[str, Any]) -> Any:
+    def describe(
+        self,
+        clerk: ClerkBase,
+        locator: str,
+        script: str,
+        kwargs: dict[str, Any],
+        env: dict[str, str],
+    ) -> Any:
         """Short descriptor of the job.
 
         See ``__call__`` method for parameter documentation.
         """
         return locator
 
-    def __call__(self, clerk: ClerkBase, locator: str, script: str, kwargs: dict[str, Any]) -> Any:
+    def __call__(
+        self,
+        clerk: ClerkBase,
+        locator: str,
+        script: str,
+        kwargs: dict[str, Any],
+        env: dict[str, str],
+    ) -> Any:
         """Execute the job unconditionally.
 
         Parameters
@@ -171,6 +186,8 @@ class Job(MetaFuncBase):
             respectively.
         kwargs
             Keyword arguments to be stored in the ``kwargs.json`` input for the jobs cript.
+        env
+            A dictionary with environment variables for the subprocess.
 
         Returns
         -------
@@ -181,6 +198,10 @@ class Job(MetaFuncBase):
 
         def run(workdir: Path) -> bool:
             print(f"Starting {locator}")
+
+            # Define useful environment variable
+            parman_env = env | {"PARMAN_WORKDIR": os.getcwd()}
+            write_sh_env(workdir / "jobenv.sh", parman_env)
 
             # Initialize the work directory
             shutil.copytree(self.template, workdir, dirs_exist_ok=True)
@@ -202,6 +223,7 @@ class Job(MetaFuncBase):
                         shell=True,
                         cwd=workdir,
                         check=True,
+                        env=os.environ | parman_env,
                     )
             except subprocess.CalledProcessError as exc:
                 if fn_err.is_file():
@@ -235,7 +257,12 @@ class Job(MetaFuncBase):
         return result
 
     def cached_result(
-        self, clerk: ClerkBase, locator: str, script: str, kwargs: dict[str, Any]
+        self,
+        clerk: ClerkBase,
+        locator: str,
+        script: str,
+        kwargs: dict[str, Any],
+        env: dict[str, str],
     ) -> Any:
         """Return the result from a previous run if available.
 
@@ -307,7 +334,12 @@ class Job(MetaFuncBase):
             return NotImplemented
 
     def get_parameters_api(
-        self, clerk: ClerkBase, locator: str, script: str, kwargs: dict[str, Any]
+        self,
+        clerk: ClerkBase,
+        locator: str,
+        script: str,
+        kwargs: dict[str, Any],
+        env: dict[str, str],
     ) -> dict[str, Any]:
         """Return the parameter API derived from the ``jobinfo.py`` metadata.
 
@@ -321,7 +353,12 @@ class Job(MetaFuncBase):
         return parameters_api
 
     def get_result_mock(
-        self, clerk: ClerkBase, locator: str, script: str, kwargs: dict[str, Any]
+        self,
+        clerk: ClerkBase,
+        locator: str,
+        script: str,
+        kwargs: dict[str, Any],
+        env: dict[str, str],
     ) -> Any:
         """Return a mock result, derived from the ``jobinfo.py`` metadata.
 
@@ -330,7 +367,12 @@ class Job(MetaFuncBase):
         return self.mock_func(**kwargs)
 
     def get_resources(
-        self, clerk: ClerkBase, locator: str, script: str, kwargs: dict[str, Any]
+        self,
+        clerk: ClerkBase,
+        locator: str,
+        script: str,
+        kwargs: dict[str, Any],
+        env: dict[str, str],
     ) -> dict:
         """Return the value of the resources dictionary in ``jobinfo.py``
 
@@ -438,12 +480,21 @@ def strip_line(line: str):
     return line.strip()
 
 
+def write_sh_env(path_rc, env):
+    with open(path_rc, "w") as f:
+        for key, value in env.items():
+            if not (isinstance(key, str) and re.match("[_a-zA-Z][_a-zA-Z0-9]*", key)):
+                raise ValueError(f"Invalid shell variable name: {key}")
+            f.write(f'export {key}="{value}"\n')
+
+
 @attrs.define
 class JobFactory:
     """Convenience class for instantiating new jobs"""
 
     clerk: ClerkBase = attrs.field(default=attrs.Factory(LocalClerk))
     script: str = attrs.field(default="run")
+    env: dict[str, str] = attrs.field(default=attrs.Factory(dict))
     _cache: dict[str, Job] = attrs.field(init=False, default=attrs.Factory(dict))
 
     def __call__(self, template: str, locator: str, **kwargs) -> Closure:
@@ -454,7 +505,7 @@ class JobFactory:
             self._cache[template] = job
         all_kwargs = job.get_defaults()
         all_kwargs.update(kwargs)
-        return Closure(job, [self.clerk, locator, self.script, all_kwargs])
+        return Closure(job, [self.clerk, locator, self.script, all_kwargs, self.env])
 
 
 job = JobFactory()

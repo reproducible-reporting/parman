@@ -28,6 +28,11 @@ TEMPERATURES = [300, 400]
 NUM_GENERATIONS = 3
 
 
+# The following line defines a global environment variable for all jobs.
+# It is stored in `jobenv.sh` for every job, such that it remains clear they were set.
+job.env["SOME_NAME"] = "some_value"
+
+
 def main():
     """Main program."""
     args = parse_args()

@@ -11,11 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - A pure Python usage example (Differential Evolution Monte Carlo).
 - The `parman-sbatch-wait` script to facilitate running workflow jobs on a Slurm cluster.
-- Support for optional arguments in `jobinfo.py`
+- Support for optional arguments in `jobinfo.py`.
+- Global workflow environment variables for jobs can be defined and stored in the results dir.
 
 ### Fixed
 
-- Fixed a Python-3.10 specific bug. (thanks to tox)
+- Fixed a Python-3.10 specific bug. (thanks to tox).
 - Minimal Python version set to 3.10, for modern type hinting support.
 
 ### Changed

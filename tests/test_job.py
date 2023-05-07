@@ -23,7 +23,8 @@ import os
 import stat
 from pathlib import Path
 
-from parman.job import JobFactory
+import pytest
+from parman.job import JobFactory, strip_line, write_sh_env
 
 
 def setup_jobfactory(root: Path, jobinfo: str, run: str) -> JobFactory:
@@ -40,8 +41,8 @@ def setup_jobfactory(root: Path, jobinfo: str, run: str) -> JobFactory:
 
 
 ENVVAR_JOBINFO = """
-def mock() -> str:
-    return "mock"
+def mock() -> dict[str, str]:
+    return {"aaaa": "", "bbbb": ""}
 """
 
 ENVVAR_RUN = """\
@@ -52,8 +53,12 @@ import os
 
 
 def main():
+    assert "PARMAN_ROOT" in os.environ
     with open("result.json", "w") as f:
-        json.dump(os.getenv("PARMAN_TEST_JOB_QOFDHEIC", "wrong"), f)
+        json.dump({
+            "aaaa": os.environ.get("PARMAN_TEST_JOB_AAAA", "wrong_a"),
+            "bbbb": os.environ.get("PARMAN_TEST_JOB_BBBB", "wrong_b"),
+        }, f)
 
 
 if __name__ == "__main__":
@@ -63,10 +68,18 @@ if __name__ == "__main__":
 
 def test_envvar(tmppath: Path):
     job, template_path = setup_jobfactory(tmppath, ENVVAR_JOBINFO, ENVVAR_RUN)
+    job.env = {"PARMAN_TEST_JOB_BBBB": "correct_b"}
     closure = job(template_path, "sample")
-    os.putenv("PARMAN_TEST_JOB_QOFDHEIC", "correct")
+    os.environ["PARMAN_TEST_JOB_AAAA"] = "correct_a"
     result = closure.validated_call()
-    assert result == "correct"
+    assert result["aaaa"] == "correct_a"
+    assert result["bbbb"] == "correct_b"
+    assert len(result) == 2
+    with open(tmppath / "results" / "sample" / "jobenv.sh") as f:
+        lines = f.readlines()
+    assert lines[0] == 'export PARMAN_TEST_JOB_BBBB="correct_b"\n'
+    assert lines[1] == f'export PARMAN_WORKDIR="{os.getcwd()}"\n'
+    assert len(lines) == 2
 
 
 OPTIONAL_JOBINFO = """
@@ -99,3 +112,34 @@ def test_optional(tmppath: Path):
     closure = job(template_path, "sample", first=1)
     result = closure.validated_call()
     assert result == 3
+
+
+@pytest.mark.parametrize(
+    "inp, out",
+    [
+        ("  aaa bbb \n", "aaa bbb"),
+        ("  aaa # bbb \n", "aaa"),
+        ("  #  aaa # bbb \n", ""),
+    ],
+)
+def test_strip_line(inp, out):
+    assert strip_line(inp) == out
+
+
+def test_write_sh_env(tmppath: Path):
+    path_rc = tmppath / "test.sh"
+    write_sh_env(path_rc, {"ABC": "123", "FOO": "BAR"})
+    with open(path_rc) as f:
+        lines = f.readlines()
+    assert lines[0] == 'export ABC="123"\n'
+    assert lines[1] == 'export FOO="BAR"\n'
+
+
+def test_write_sh_env_exceptions(tmppath: Path):
+    path_rc = tmppath / "test.sh"
+    with pytest.raises(ValueError):
+        write_sh_env(path_rc, {"1ABC": "z"})
+    with pytest.raises(ValueError):
+        write_sh_env(path_rc, {"": "z"})
+    with pytest.raises(ValueError):
+        write_sh_env(path_rc, {1: "z"})

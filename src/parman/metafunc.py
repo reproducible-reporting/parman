@@ -200,7 +200,7 @@ def type_api_from_mock(mock_api):
 
     def transform(_, mock_leaf):
         if isinstance(mock_leaf, type):
-            raise TypeError("A mock_api cannot contain types.")
+            raise TypeError("A mock result cannot contain types.")
         return type(mock_leaf)
 
     return transform_tree(transform, mock_api)
