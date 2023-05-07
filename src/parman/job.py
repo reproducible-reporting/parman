@@ -340,6 +340,16 @@ class Job(MetaFuncBase):
         """
         return self.resources
 
+    def get_defaults(self):
+        """Get the default keyword arguments specified in the jobinfo file."""
+        signature = inspect.signature(self.result_mock_func)
+        defaults = {}
+        for name, parameter in signature.parameters.items():
+            default = parameter.default
+            if default != parameter.empty:
+                defaults[name] = default
+        return defaults
+
 
 def structure(prefix: str, json_data: Any, data_api: Any) -> Any:
     """Structure the unstructured data loaded from a JSON file.
@@ -444,7 +454,9 @@ class JobFactory:
         if job is None:
             job = Job.from_template(template)
             self._cache[template] = job
-        return Closure(job, [self.clerk, locator, self.script, kwargs])
+        all_kwargs = job.get_defaults()
+        all_kwargs.update(kwargs)
+        return Closure(job, [self.clerk, locator, self.script, all_kwargs])
 
 
 job = JobFactory()
