@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """A simple usage example of parman.scheduler.
 
-Note: ParMan Runner classes hide most of the technical complexity seen in this example.
+Note: Parman Runner classes hide most of the technical complexity seen in this example.
 """
 
 import time

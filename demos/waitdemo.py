@@ -2,7 +2,7 @@
 """A simple usage example of parman.waitfuture.
 
 Note: Direct use of WaitGraph by end-users is expected to be marginal.
-It is used extensively by ParMan Runners to hide technical complexities.
+It is used extensively by Parman Runners to hide technical complexities.
 """
 
 import time

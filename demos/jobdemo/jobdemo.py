@@ -46,7 +46,7 @@ def main():
 
 def parse_args() -> argparse.Namespace:
     """Parse the command-line arguments."""
-    parser = argparse.ArgumentParser("ParMan demo with job scripts")
+    parser = argparse.ArgumentParser("Parman demo with job scripts")
     parser.add_argument(
         "framework",
         help="The framework to execute the workflow",
@@ -57,7 +57,7 @@ def parse_args() -> argparse.Namespace:
         "--schedule",
         default=False,
         action="store_true",
-        help="Enable the ParMan scheduler, not relevant for serial and dry.",
+        help="Enable the Parman scheduler, not relevant for serial and dry.",
     )
     parser.add_argument(
         "-p", "--pause", default=1.0, type=float, help="The time to pause in each job, in seconds."

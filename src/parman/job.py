@@ -1,14 +1,14 @@
-# ParMan extends Python concurrent.futures to facilitate parallel workflows.
+# Parman extends Python concurrent.futures to facilitate parallel workflows.
 # Copyright (C) 2023 Toon Verstraelen
 #
-# This file is part of ParMan.
+# This file is part of Parman.
 #
-# ParMan is free software; you can redistribute it and/or
+# Parman is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
 # as published by the Free Software Foundation; either version 3
 # of the License, or (at your option) any later version.
 #
-# ParMan is distributed in the hope that it will be useful,
+# Parman is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
@@ -139,7 +139,7 @@ class Job(MetaFuncBase):
         ----------
         template
             The template directory must contain a ``jobinfo.py`` file with the metadata
-            needed to schedule the job in ParMan.
+            needed to schedule the job in Parman.
             See module-level docstring for more information on this file.
             When the template is a relative path, it gets converted to an absolute one.
         """
