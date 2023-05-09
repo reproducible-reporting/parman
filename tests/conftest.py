@@ -19,7 +19,6 @@
 # --
 """Shared fixtures for the unit tests."""
 
-import pathlib
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 
 import pytest
@@ -39,9 +38,3 @@ def pool1(request):
     PoolExecutor = request.param
     with PoolExecutor(max_workers=1) as pool:
         yield pool
-
-
-@pytest.fixture
-def tmppath(tmpdir):
-    """Temperory path version of tmpdir."""
-    return pathlib.Path(tmpdir)

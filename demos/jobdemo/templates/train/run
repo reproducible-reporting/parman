@@ -8,7 +8,7 @@ python3 helper.py
 echo "important results" > valuable.txt
 
 # List files worth keeping
-echo > result.extra << EOF
+cat > result.extra << EOF
 valuable.txt
 helper.py
 EOF

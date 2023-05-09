@@ -66,8 +66,8 @@ if __name__ == "__main__":
 """
 
 
-def test_envvar(tmppath: Path):
-    job, template_path = setup_jobfactory(tmppath, ENVVAR_JOBINFO, ENVVAR_RUN)
+def test_envvar(tmp_path: Path):
+    job, template_path = setup_jobfactory(tmp_path, ENVVAR_JOBINFO, ENVVAR_RUN)
     job.env = {"PARMAN_TEST_JOB_BBBB": "correct_b"}
     closure = job(template_path, "sample")
     os.environ["PARMAN_TEST_JOB_AAAA"] = "correct_a"
@@ -75,7 +75,7 @@ def test_envvar(tmppath: Path):
     assert result["aaaa"] == "correct_a"
     assert result["bbbb"] == "correct_b"
     assert len(result) == 2
-    with open(tmppath / "results" / "sample" / "jobenv.sh") as f:
+    with open(tmp_path / "results" / "sample" / "jobenv.sh") as f:
         lines = f.readlines()
     assert lines[0] == 'export PARMAN_TEST_JOB_BBBB="correct_b"\n'
     assert lines[1] == f'export PARMAN_WORKDIR="{os.getcwd()}"\n'
@@ -107,8 +107,8 @@ if __name__ == "__main__":
 """
 
 
-def test_optional(tmppath: Path):
-    job, template_path = setup_jobfactory(tmppath, OPTIONAL_JOBINFO, OPTIONAL_RUN)
+def test_optional(tmp_path: Path):
+    job, template_path = setup_jobfactory(tmp_path, OPTIONAL_JOBINFO, OPTIONAL_RUN)
     closure = job(template_path, "sample", first=1)
     result = closure.validated_call()
     assert result == 3
@@ -126,8 +126,8 @@ def test_strip_line(inp, out):
     assert strip_line(inp) == out
 
 
-def test_write_sh_env(tmppath: Path):
-    path_rc = tmppath / "test.sh"
+def test_write_sh_env(tmp_path: Path):
+    path_rc = tmp_path / "test.sh"
     write_sh_env(path_rc, {"ABC": "123", "FOO": "BAR"})
     with open(path_rc) as f:
         lines = f.readlines()
@@ -135,8 +135,8 @@ def test_write_sh_env(tmppath: Path):
     assert lines[1] == 'export FOO="BAR"\n'
 
 
-def test_write_sh_env_exceptions(tmppath: Path):
-    path_rc = tmppath / "test.sh"
+def test_write_sh_env_exceptions(tmp_path: Path):
+    path_rc = tmp_path / "test.sh"
     with pytest.raises(ValueError):
         write_sh_env(path_rc, {"1ABC": "z"})
     with pytest.raises(ValueError):

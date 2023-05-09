@@ -17,7 +17,14 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-"""Run the demos to verify that they run without errors."""
+"""Run the demos to verify that they run without errors.
+
+If the files in the jobdemo are updated, refresh the hashes as follows
+
+cd demos/jobdemo
+find results -type f | grep -v -E '(jobenv.sh|submit.sh)' | \
+     xargs sha256sum > ../../tests/jobdemo-results.sha256
+"""
 
 
 import hashlib
@@ -30,34 +37,34 @@ from pathlib import Path
 import pytest
 
 
-def test_linreg(tmppath: Path):
-    run_script(["python3", "linreg.py"], Path("demos/demc"), [Path("linreg.py")], tmppath)
+def test_linreg(tmp_path: Path):
+    run_script(["python3", "linreg.py"], Path("demos/demc"), [Path("linreg.py")], tmp_path)
 
 
-def test_naivemc(tmppath: Path):
+def test_naivemc(tmp_path: Path):
     run_script(
         ["python3", "naivemc.py", "1000", "10"],
         Path("demos/demc"),
         [Path("linreg.py"), Path("naivemc.py")],
-        tmppath,
+        tmp_path,
     )
 
 
-def test_demc_serial(tmppath: Path):
+def test_demc_serial(tmp_path: Path):
     run_script(
         ["python3", "demc.py", "1000", "10"],
         Path("demos/demc"),
         [Path("linreg.py"), Path("naivemc.py"), Path("demc.py")],
-        tmppath,
+        tmp_path,
     )
 
 
-def test_demc_parman(tmppath: Path):
+def test_demc_parman(tmp_path: Path):
     run_script(
         ["python3", "demc.py", "1000", "10", "--parman"],
         Path("demos/demc"),
         [Path("linreg.py"), Path("naivemc.py"), Path("demc.py")],
-        tmppath,
+        tmp_path,
     )
 
 
@@ -81,7 +88,7 @@ def test_demc_parman(tmppath: Path):
         ("parsl-local", True, True),
     ],
 )
-def test_jobdemo(framework: str, schedule: bool, in_temp: bool, tmppath: Path):
+def test_jobdemo(framework: str, schedule: bool, in_temp: bool, tmp_path: Path):
     args = ["python3", "jobdemo.py", framework, "--pause=0"]
     if schedule:
         args.append("-s")
@@ -102,54 +109,9 @@ def test_jobdemo(framework: str, schedule: bool, in_temp: bool, tmppath: Path):
     ]
 
     # Run the jobdemo in a subprocess. (runpy does not work with parsl.)
-    run_script(args, Path("demos/jobdemo"), relpaths, tmppath)
+    run_script(args, Path("demos/jobdemo"), relpaths, tmp_path)
     if framework != "dry":
-        check_files(tmppath, "tests/jobdemo-results.sha256")
-
-
-def test_plastic_ibuprofen(tmppath: Path):
-    run_script(
-        [
-            "python3",
-            "plastic.py",
-            "ibuprofen.xyz",
-            "ibuprofen.traj",
-            "ibuprofen_final.xyz",
-            "--steps=100",
-        ],
-        Path("demos/inspiration/plastic"),
-        [Path("plastic.py"), Path("ibuprofen.xyz")],
-        tmppath,
-    )
-
-
-def test_plastic_alumina(tmppath: Path):
-    run_script(
-        [
-            "python3",
-            "plastic.py",
-            "alumina.json",
-            "alumina.traj",
-            "alumina_final.xyz",
-            "--steps=100",
-        ],
-        Path("demos/inspiration/plastic"),
-        [Path("plastic.py"), Path("alumina.json")],
-        tmppath,
-    )
-
-
-def run_script(args: list[str], root: Path, relpaths: list[Path], tmppath: Path, nrepeat: int = 1):
-    """Run a script with auxiliary files in a temporary directory."""
-    # Put the files in place
-    for relpath in relpaths:
-        dn_dst = tmppath / relpath.parent
-        dn_dst.mkdir(parents=True, exist_ok=True)
-        shutil.copy(root / relpath, tmppath / relpath)
-    # Execute the script
-    env = os.environ | {"PYTHONPATH": Path("src/").absolute()}
-    for _ in range(nrepeat):
-        subprocess.run(args, check=True, cwd=tmppath, env=env)
+        check_files(tmp_path, "tests/jobdemo-results.sha256")
 
 
 def check_files(root, fn_sha):
@@ -164,6 +126,51 @@ def check_hash(expected_sha256, path):
         content = f.read()
         if hashlib.sha256(content).hexdigest() != expected_sha256:
             raise AssertionError(f"SHA256 mismatch: {path}")
+
+
+def test_plastic_ibuprofen(tmp_path: Path):
+    run_script(
+        [
+            "python3",
+            "plastic.py",
+            "ibuprofen.xyz",
+            "ibuprofen.traj",
+            "ibuprofen_final.xyz",
+            "--steps=100",
+        ],
+        Path("demos/inspiration/plastic"),
+        [Path("plastic.py"), Path("ibuprofen.xyz")],
+        tmp_path,
+    )
+
+
+def test_plastic_alumina(tmp_path: Path):
+    run_script(
+        [
+            "python3",
+            "plastic.py",
+            "alumina.json",
+            "alumina.traj",
+            "alumina_final.xyz",
+            "--steps=100",
+        ],
+        Path("demos/inspiration/plastic"),
+        [Path("plastic.py"), Path("alumina.json")],
+        tmp_path,
+    )
+
+
+def run_script(args: list[str], root: Path, relpaths: list[Path], tmp_path: Path, nrepeat: int = 1):
+    """Run a script with auxiliary files in a temporary directory."""
+    # Put the files in place
+    for relpath in relpaths:
+        dn_dst = tmp_path / relpath.parent
+        dn_dst.mkdir(parents=True, exist_ok=True)
+        shutil.copy(root / relpath, tmp_path / relpath)
+    # Execute the script
+    env = os.environ | {"PYTHONPATH": Path("src/").absolute()}
+    for _ in range(nrepeat):
+        subprocess.run(args, check=True, cwd=tmp_path, env=env)
 
 
 @pytest.mark.parametrize(

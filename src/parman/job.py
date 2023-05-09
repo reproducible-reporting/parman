@@ -239,6 +239,7 @@ class Job(MetaFuncBase):
             clerk.push(f"{script}.err", locator, workdir)
 
             # There may be some extra files, not explicitly included in the results, worth keeping.
+            clerk.push("jobinfo.py", locator, workdir)
             fn_extra = workdir / "result.extra"
             if fn_extra.is_file():
                 with open(fn_extra) as f:
