@@ -160,7 +160,8 @@ def validate(prefix, data, type_api):
     """
     for mulidx, (leaf, leaf_type) in iterate_tree(data, type_api):
         if isinstance(leaf_type, types.GenericAlias):
-            # Use cattrs magic to check the type
+            # Use cattrs magic to check the type.
+            # The GenericAlias types cannot be checked with isinstance.
             try:
                 cattrs.structure(leaf, leaf_type)
             except cattrs.IterableValidationError as exc:
@@ -171,12 +172,15 @@ def validate(prefix, data, type_api):
                 raise TypeError(
                     f"{prefix} at {mulidx}: type {leaf_type} cannot be instantiated"
                 ) from exc
-        elif isinstance(leaf_type, type):
-            # Standard Python type check
-            if not isinstance(leaf, leaf_type):
-                raise TypeError(f"{prefix} at {mulidx} is not of type {leaf_type}")
         else:
-            raise TypeError(f"{prefix} at {mulidx}: cannot type-check {leaf} with {leaf_type}")
+            # Standard Python type check
+            try:
+                if not isinstance(leaf, leaf_type):
+                    raise TypeError(f"{prefix} at {mulidx} is not of type {leaf_type}")
+            except Exception as exc:
+                raise TypeError(
+                    f"{prefix} at {mulidx}: cannot type-check {leaf} with {leaf_type}"
+                ) from exc
 
 
 def type_api_from_signature(signature):

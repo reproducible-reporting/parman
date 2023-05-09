@@ -19,11 +19,13 @@
 # --
 """Run the demos to verify that they run without errors.
 
-If the files in the jobdemo are updated, refresh the hashes as follows
+If the files in the jobdemo are updated, refresh the hashes as follows:
 
-cd demos/jobdemo
-find results -type f | grep -v -E '(jobenv.sh|submit.sh)' | \
+(
+    cd demos/jobdemo && ./jobdemo serial -p 0 &&
+    find results -type f | grep -v -E '(jobenv.sh|submit.sh)' | \
      xargs sha256sum > ../../tests/jobdemo-results.sha256
+)
 """
 
 
@@ -111,7 +113,7 @@ def test_jobdemo(framework: str, schedule: bool, in_temp: bool, tmp_path: Path):
     # Run the jobdemo in a subprocess. (runpy does not work with parsl.)
     run_script(args, Path("demos", "jobdemo"), relpaths, tmp_path)
     if framework != "dry":
-        check_files(tmp_path, "tests", "jobdemo-results.sha256")
+        check_files(tmp_path, Path("tests", "jobdemo-results.sha256"))
 
 
 def check_files(root, fn_sha):
