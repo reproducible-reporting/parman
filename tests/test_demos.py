@@ -22,7 +22,7 @@
 If the files in the jobdemo are updated, refresh the hashes as follows:
 
 (
-    cd demos/jobdemo && ./jobdemo serial -p 0 &&
+    cd demos/jobdemo && ./jobdemo.py serial -p 0 &&
     find results -type f | grep -v -E '(jobenv.sh|submit.sh)' | \
      xargs sha256sum > ../../tests/jobdemo-results.sha256
 )
