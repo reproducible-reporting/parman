@@ -38,13 +38,13 @@ import pytest
 
 
 def test_linreg(tmp_path: Path):
-    run_script(["python3", "linreg.py"], Path("demos/demc"), [Path("linreg.py")], tmp_path)
+    run_script(["python3", "linreg.py"], Path("demos", "demc"), [Path("linreg.py")], tmp_path)
 
 
 def test_naivemc(tmp_path: Path):
     run_script(
         ["python3", "naivemc.py", "1000", "10"],
-        Path("demos/demc"),
+        Path("demos", "demc"),
         [Path("linreg.py"), Path("naivemc.py")],
         tmp_path,
     )
@@ -53,7 +53,7 @@ def test_naivemc(tmp_path: Path):
 def test_demc_serial(tmp_path: Path):
     run_script(
         ["python3", "demc.py", "1000", "10"],
-        Path("demos/demc"),
+        Path("demos", "demc"),
         [Path("linreg.py"), Path("naivemc.py"), Path("demc.py")],
         tmp_path,
     )
@@ -62,7 +62,7 @@ def test_demc_serial(tmp_path: Path):
 def test_demc_parman(tmp_path: Path):
     run_script(
         ["python3", "demc.py", "1000", "10", "--parman"],
-        Path("demos/demc"),
+        Path("demos", "demc"),
         [Path("linreg.py"), Path("naivemc.py"), Path("demc.py")],
         tmp_path,
     )
@@ -97,21 +97,21 @@ def test_jobdemo(framework: str, schedule: bool, in_temp: bool, tmp_path: Path):
 
     relpaths = [
         Path("jobdemo.py"),
-        Path("templates/boot/jobinfo.py"),
-        Path("templates/boot/run"),
-        Path("templates/compute/jobinfo.py"),
-        Path("templates/compute/run"),
-        Path("templates/sample/jobinfo.py"),
-        Path("templates/sample/run"),
-        Path("templates/train/helper.py"),
-        Path("templates/train/jobinfo.py"),
-        Path("templates/train/run"),
+        Path("templates", "boot", "jobinfo.py"),
+        Path("templates", "boot", "run"),
+        Path("templates", "compute", "jobinfo.py"),
+        Path("templates", "compute", "run"),
+        Path("templates", "sample", "jobinfo.py"),
+        Path("templates", "sample", "run"),
+        Path("templates", "train", "helper.py"),
+        Path("templates", "train", "jobinfo.py"),
+        Path("templates", "train", "run"),
     ]
 
     # Run the jobdemo in a subprocess. (runpy does not work with parsl.)
-    run_script(args, Path("demos/jobdemo"), relpaths, tmp_path)
+    run_script(args, Path("demos", "jobdemo"), relpaths, tmp_path)
     if framework != "dry":
-        check_files(tmp_path, "tests/jobdemo-results.sha256")
+        check_files(tmp_path, "tests", "jobdemo-results.sha256")
 
 
 def check_files(root, fn_sha):
@@ -138,7 +138,7 @@ def test_plastic_ibuprofen(tmp_path: Path):
             "ibuprofen_final.xyz",
             "--steps=100",
         ],
-        Path("demos/inspiration/plastic"),
+        Path("demos", "inspiration", "plastic"),
         [Path("plastic.py"), Path("ibuprofen.xyz")],
         tmp_path,
     )
@@ -154,7 +154,7 @@ def test_plastic_alumina(tmp_path: Path):
             "alumina_final.xyz",
             "--steps=100",
         ],
-        Path("demos/inspiration/plastic"),
+        Path("demos", "inspiration", "plastic"),
         [Path("plastic.py"), Path("alumina.json")],
         tmp_path,
     )
@@ -168,13 +168,18 @@ def run_script(args: list[str], root: Path, relpaths: list[Path], tmp_path: Path
         dn_dst.mkdir(parents=True, exist_ok=True)
         shutil.copy(root / relpath, tmp_path / relpath)
     # Execute the script
-    env = os.environ | {"PYTHONPATH": Path("src/").absolute()}
+    env = os.environ | {"PYTHONPATH": Path("src").absolute()}
     for _ in range(nrepeat):
         subprocess.run(args, check=True, cwd=tmp_path, env=env)
 
 
 @pytest.mark.parametrize(
-    "path", ["demos/mindmutable.py", "demos/scheduledemo.py", "demos/waitdemo.py"]
+    "path",
+    [
+        Path("demos", "mindmutable.py"),
+        Path("demos", "scheduledemo.py"),
+        Path("demos", "waitdemo.py"),
+    ],
 )
 def test_simpledemo(path):
     runpy.run_path(path)

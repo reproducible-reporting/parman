@@ -132,7 +132,7 @@ class Job(MetaFuncBase):
         self.mock_func = ns["mock"]
 
     @classmethod
-    def from_template(cls, template: str) -> "Job":
+    def from_template(cls, template: str | Path) -> "Job":
         """Initialize a job script from a template directory.
 
         Parameters
@@ -151,7 +151,7 @@ class Job(MetaFuncBase):
     def describe(
         self,
         clerk: ClerkBase,
-        locator: str,
+        locator: str | Path,
         script: str,
         kwargs: dict[str, Any],
         env: dict[str, str],
@@ -165,7 +165,7 @@ class Job(MetaFuncBase):
     def __call__(
         self,
         clerk: ClerkBase,
-        locator: str,
+        locator: str | Path,
         script: str,
         kwargs: dict[str, Any],
         env: dict[str, str],
@@ -260,7 +260,7 @@ class Job(MetaFuncBase):
     def cached_result(
         self,
         clerk: ClerkBase,
-        locator: str,
+        locator: str | Path,
         script: str,
         kwargs: dict[str, Any],
         env: dict[str, str],
@@ -320,7 +320,7 @@ class Job(MetaFuncBase):
         return self._in_workdir(run, clerk, locator, kwargs)
 
     def _in_workdir(
-        self, run: callable, clerk: ClerkBase, locator: str, kwargs: dict[str, Any]
+        self, run: callable, clerk: ClerkBase, locator: str | Path, kwargs: dict[str, Any]
     ) -> dict[str, Any]:
         """Internal method for running something in a job work directory."""
         result_api = type_api_from_mock(self.mock_func(**kwargs))
@@ -337,7 +337,7 @@ class Job(MetaFuncBase):
     def get_parameters_api(
         self,
         clerk: ClerkBase,
-        locator: str,
+        locator: str | Path,
         script: str,
         kwargs: dict[str, Any],
         env: dict[str, str],
@@ -356,7 +356,7 @@ class Job(MetaFuncBase):
     def get_result_mock(
         self,
         clerk: ClerkBase,
-        locator: str,
+        locator: str | Path,
         script: str,
         kwargs: dict[str, Any],
         env: dict[str, str],
@@ -370,7 +370,7 @@ class Job(MetaFuncBase):
     def get_resources(
         self,
         clerk: ClerkBase,
-        locator: str,
+        locator: str | Path,
         script: str,
         kwargs: dict[str, Any],
         env: dict[str, str],

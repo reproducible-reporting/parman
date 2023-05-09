@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 import json
-import os
 import time
+from pathlib import Path
 
 
 def main():
@@ -14,7 +14,7 @@ def main():
     for model in kwargs["models"]:
         # Just checking the presence of the file.
         # A Realistic example would load and use it.
-        assert os.path.isfile(model)
+        assert Path(model).is_file()
 
     print("sampling new configurations")
     configs = []
