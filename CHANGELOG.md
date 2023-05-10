@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- When `kwargs.json` is manually filled with `null`, it will be refreshed under the assumption
+  that the existing results are consistent with the new `kwargs.json` file.
+  This is useful when one is refactoring workflows and one wants to reuse some results of
+  a previous run.
+
 ### Fixed
 
 - Fixed mistake in `jobdemo` example (writing `result.extra`).

@@ -279,32 +279,38 @@ class Job(MetaFuncBase):
         """
 
         def run(workdir: Path) -> bool:
-            # If kwargs absent, so we'll assume the job has never been run before.
+            # If kwargs absent, we'll assume the job has never been run before.
             path_kwargs = workdir / clerk.pull(locator / Path("kwargs.json"), locator, workdir)
             if not path_kwargs.is_file():
                 return False
 
-            # If kwargs inconsistent -> rerun
+            # If kwargs inconsistent -> refresh or raise exception
             with open(path_kwargs) as f:
                 found_kwargs = json.load(f)
             expected_kwargs = clerk.localize(kwargs, locator, workdir)
             unstruct_kwargs = unstructure(expected_kwargs)
-            if found_kwargs != unstruct_kwargs:
+            if found_kwargs is None:
+                # It is assumed that the old kwargs.json is manually flagged as outdated
+                # and safe to be refreshed.
+                print(f"Rewriting nullified kwargs.json in {locator}")
+                with open(workdir / "kwargs.json", "w") as f:
+                    json.dump(unstruct_kwargs, f)
+                clerk.push("kwargs.json", locator, workdir)
+            elif found_kwargs != unstruct_kwargs:
                 with open(workdir / "kwargs-new.json", "w") as f:
                     json.dump(unstruct_kwargs, f)
-                os.system(f"ls {workdir}")
                 clerk.push("kwargs-new.json", locator, workdir)
                 raise ValueError(
                     f"Existing kwarg.json in {locator} inconsistent with new kwargs. "
                     "Added kwargs-new.json for comparison."
                 )
 
-            # If hashes file (even if it should be empty) is missing -> rerun
+            # If hashes file (even if it should be empty) is missing -> raise exception
             path_sha256 = workdir / clerk.pull(locator / Path("kwargs.sha256"), locator, workdir)
             if not path_sha256.is_file():
                 raise ValueError(f"File kwarg.sha256 not found in existing {locator}.")
 
-            # If files in kwargs have changes hashes -> rerun
+            # If files in kwargs have changes hashes -> raise exception
             found_hashes = load_hashes(path_sha256)
             expected_hashes = compute_hashes(expected_kwargs, workdir)
             if found_hashes != expected_hashes:
