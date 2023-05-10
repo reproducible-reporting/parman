@@ -282,6 +282,11 @@ class Job(MetaFuncBase):
             # If kwargs absent, we'll assume the job has never been run before.
             path_kwargs = workdir / clerk.pull(locator / Path("kwargs.json"), locator, workdir)
             if not path_kwargs.is_file():
+                # Check for the presence of a result.json file,
+                # If present, this would suggest a broken state of the job
+                path_result = workdir / clerk.pull(locator / Path("result.json"), locator, workdir)
+                if path_result.is_file():
+                    raise ValueError(f"Found result.json in {locator} while kwargs.json is absent.")
                 return False
 
             # If kwargs inconsistent -> refresh or raise exception
@@ -307,19 +312,21 @@ class Job(MetaFuncBase):
 
             # If hashes file (even if it should be empty) is missing -> raise exception
             path_sha256 = workdir / clerk.pull(locator / Path("kwargs.sha256"), locator, workdir)
-            if not path_sha256.is_file():
-                raise ValueError(f"File kwarg.sha256 not found in existing {locator}.")
-
-            # If files in kwargs have changes hashes -> raise exception
-            found_hashes = load_hashes(path_sha256)
             expected_hashes = compute_hashes(expected_kwargs, workdir)
-            if found_hashes != expected_hashes:
-                dump_hashes(workdir / "kwargs-new.sha256", expected_hashes)
-                clerk.push("kwargs-new.sha256", locator, workdir)
-                raise ValueError(
-                    f"Existing kwarg.json in {locator} inconsistent with new hashes. "
-                    "Added kwargs-new.sha256 for comparison."
-                )
+            if path_sha256.is_file():
+                # If files in kwargs have changes hashes -> raise exception
+                found_hashes = load_hashes(path_sha256)
+                if found_hashes != expected_hashes:
+                    dump_hashes(workdir / "kwargs-new.sha256", expected_hashes)
+                    clerk.push("kwargs-new.sha256", locator, workdir)
+                    raise ValueError(
+                        f"Existing kwarg.json in {locator} inconsistent with new hashes. "
+                        "Added kwargs-new.sha256 for comparison."
+                    )
+            else:
+                print(f"Rewriting removed kwargs.sha256 in {locator}")
+                dump_hashes(workdir / "kwargs.sha256", expected_hashes)
+                clerk.push("kwargs.sha256", locator, workdir)
 
             return True
 
