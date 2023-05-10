@@ -1,14 +1,14 @@
 [![pytest](https://github.com/reproducible-reporting/parman/actions/workflows/pytest.yaml/badge.svg)](https://github.com/reproducible-reporting/parman/actions/workflows/pytest.yaml)
 [![PyPI Upload](https://github.com/reproducible-reporting/parman/actions/workflows/pypi.yaml/badge.svg)](https://github.com/reproducible-reporting/parman/actions/workflows/pypi.yaml)
-[![PyPI Version](https://img.shields.io/pypi/v/parman)](https://pypi.org/project/ParMan/)
+[![PyPI Version](https://img.shields.io/pypi/v/parman)](https://pypi.org/project/Parman/)
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/parman)
 ![LGPL-3 License](https://img.shields.io/github/license/reproducible-reporting/parman)
 
 # Parman
 
-At this stage, ParMan is an experimental project, so expect a rocky road ahead.
+At this stage, Parman is an experimental project, so expect a rocky road ahead.
 
-The goal of ParMan is to extend `concurrent.futures` (and compatible implementations)
+The goal of Parman is to extend `concurrent.futures` (and compatible implementations)
 with features that facilitate a transparent implementation of workflows.
 
 - `WaitFuture`: a Future subclass that is "finished" after its dependencies have finished.
@@ -56,7 +56,7 @@ python -m pip install parman
 ### Examples
 
 At this stage, there is no documentation as such.
-If you want to learn how to use ParMan, check out the [demos](demos/).
+If you want to learn how to use Parman, check out the [demos](demos/).
 If you want to understand the internals, read the source and the docstrings.
 
 
@@ -64,7 +64,7 @@ If you want to understand the internals, read the source and the docstrings.
 
 - Support for Dask, because:
   1. The Dask `Future` does not subclass from `concurrent.futures.Future`.
-     Supporting dask would imply a lot of extra boilerplate code in ParMan.
+     Supporting dask would imply a lot of extra boilerplate code in Parman.
   2. The Dask `Future` implements only a subset of `concurrent.futures.Future`.
   3. Dask Distributed has a large memory and time overhead.
 

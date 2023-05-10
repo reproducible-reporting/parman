@@ -3,11 +3,11 @@ requires = ["setuptools>=65.0", "setuptools_scm[toml]>=7.1.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "ParMan"
+name = "Parman"
 authors = [
   { name="Toon Verstraelen", email="toon.verstraelen@ugent.be" },
 ]
-description = "ParMan extends Python concurrent.futures to facilitate parallel workflows"
+description = "Parman extends Python concurrent.futures to facilitate parallel workflows"
 readme = "README.md"
 license = {file = "COPYING"}
 requires-python = ">=3.10"
