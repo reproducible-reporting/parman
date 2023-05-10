@@ -5,7 +5,9 @@ name: pypi upload
 on:
   push:
     branches:
-     - main
+    - main
+    tags:
+    - 'v*'
 
 jobs:
   build-n-publish:
