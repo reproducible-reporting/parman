@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Fixed mistake in `jobdemo` example (writing `result.extra`).
+- Add support for `None` return value in jobs.
 
 ## [0.2.0] - 2023-05-07
 
