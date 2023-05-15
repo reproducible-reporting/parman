@@ -433,7 +433,7 @@ def structure(prefix: str, json_data: Any, data_api: Any) -> Any:
 
     def transform(mulidx, json_leaf, leaf_api):
         if not isinstance(leaf_api, type | types.GenericAlias):
-            raise TypeError(f"{prefix} at {mulidx}: cannot structure type {leaf_api}")
+            raise TypeError(f"{prefix} at {mulidx}: cannot structure type {leaf_api}, leaf = {json_leaf}")
         try:
             return cattrs.structure(json_leaf, leaf_api)
         except cattrs.IterableValidationError as exc:
