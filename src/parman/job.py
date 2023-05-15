@@ -70,6 +70,7 @@ import sys
 import types
 from pathlib import Path
 from typing import Any
+from types import NoneType
 
 import attrs
 import cattrs
@@ -88,6 +89,10 @@ __all__ = ("job", "structure", "unstructure")
 cattrs.register_structure_hook(Path, lambda d, t: Path(d))
 cattrs.register_unstructure_hook(Path, lambda d: str(d))
 
+# Support for None and NoneType can be convenient
+# See https://github.com/python-attrs/cattrs/issues/346
+cattrs.register_structure_hook(NoneType, lambda d, t: None)
+cattrs.register_unstructure_hook(NoneType, lambda d: None)
 
 @attrs.define
 class Job(MetaFuncBase):
