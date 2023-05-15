@@ -69,8 +69,8 @@ import subprocess
 import sys
 import types
 from pathlib import Path
-from typing import Any
 from types import NoneType
+from typing import Any
 
 import attrs
 import cattrs
@@ -93,6 +93,7 @@ cattrs.register_unstructure_hook(Path, lambda d: str(d))
 # See https://github.com/python-attrs/cattrs/issues/346
 cattrs.register_structure_hook(NoneType, lambda d, t: None)
 cattrs.register_unstructure_hook(NoneType, lambda d: None)
+
 
 @attrs.define
 class Job(MetaFuncBase):
@@ -433,7 +434,9 @@ def structure(prefix: str, json_data: Any, data_api: Any) -> Any:
 
     def transform(mulidx, json_leaf, leaf_api):
         if not isinstance(leaf_api, type | types.GenericAlias):
-            raise TypeError(f"{prefix} at {mulidx}: cannot structure type {leaf_api}, leaf = {json_leaf}")
+            raise TypeError(
+                f"{prefix} at {mulidx}: cannot structure type {leaf_api}, leaf = {json_leaf}"
+            )
         try:
             return cattrs.structure(json_leaf, leaf_api)
         except cattrs.IterableValidationError as exc:
