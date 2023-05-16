@@ -168,7 +168,7 @@ class Job(MetaFuncBase):
         """
         return locator
 
-    def __call__(
+    def __call__(  # noqa: PLR0915
         self,
         clerk: ClerkBase,
         locator: str | Path,
@@ -201,122 +201,43 @@ class Job(MetaFuncBase):
             The structured contents of the ``result.json`` file created by the job script.
             Output files needed by following jobs must be included here.
         """
-
-        def run(workdir: Path) -> bool:
-            print(f"Starting {locator}")
-
-            # Define useful environment variable
-            parman_env = env | {"PARMAN_WORKDIR": os.getcwd()}
-            write_sh_env(workdir / "jobenv.sh", parman_env)
-
-            # Initialize the work directory
-            shutil.copytree(self.template, workdir, dirs_exist_ok=True)
-            local_kwargs = clerk.localize(kwargs, locator, workdir)
-            with open(workdir / "kwargs.json", "w") as f:
-                json.dump(unstructure(local_kwargs), f)
-            dump_hashes(workdir / "kwargs.sha256", compute_hashes(local_kwargs, workdir))
-
-            # Run the job
-            fn_out = workdir / f"{script}.out"
-            fn_err = workdir / f"{script}.err"
-            try:
-                with open(fn_out, "w") as fo, open(fn_err, "w") as fe:
-                    subprocess.run(
-                        f"./{script}",
-                        stdin=subprocess.DEVNULL,
-                        stdout=fo,
-                        stderr=fe,
-                        shell=True,
-                        cwd=workdir,
-                        check=True,
-                        env=os.environ | parman_env,
-                    )
-            except subprocess.CalledProcessError as exc:
-                if fn_err.is_file():
-                    with open(fn_err) as f:
-                        sys.stderr.write(f.read())
-                raise RuntimeError(f"Script {locator} failed: {script}.") from exc
-
-            # When we got here, the job ran as hoped, and files can be pushed back.
-            clerk.push("kwargs.json", locator, workdir)
-            clerk.push("kwargs.sha256", locator, workdir)
-            clerk.push(script, locator, workdir)
-            clerk.push(f"{script}.out", locator, workdir)
-            clerk.push(f"{script}.err", locator, workdir)
-
-            # There may be some extra files, not explicitly included in the results, worth keeping.
-            clerk.push("jobinfo.py", locator, workdir)
-            fn_extra = workdir / "result.extra"
-            if fn_extra.is_file():
-                with open(fn_extra) as f:
-                    for line in f:
-                        line = strip_line(line)
-                        if len(line) > 0:
-                            clerk.push(line.strip(), locator, workdir)
-                clerk.push("result.extra", locator, workdir)
-
-            return True
-
-        result = self._in_workdir(run, clerk, locator, kwargs)
-        if result is NotImplemented:
-            raise OSError(f"No result.json after completion of {locator}")
-        print(f"Completed {locator}")
-        return result
-
-    def cached_result(
-        self,
-        clerk: ClerkBase,
-        locator: str | Path,
-        script: str,
-        kwargs: dict[str, Any],
-        env: dict[str, str],
-    ) -> Any:
-        """Return the result from a previous run if available.
-
-        See ``__call__`` method for parameter documentation.
-
-        Returns
-        -------
-        result
-            The result that ``__call__`` would give with running any job
-            (if previous results can be loaded) or ``NotImplemented`` otherwise.
-            The existing results are only returned when the kwargs on disk match
-            the ones given here. Any inconsistency in inputs implies execution needed.
-        """
-
-        def run(workdir: Path) -> bool:
-            # If kwargs absent, we'll assume the job has never been run before.
+        result_api = type_api_from_mock(self.mock_func(**kwargs))
+        with clerk.workdir(locator) as workdir:
             path_kwargs = workdir / clerk.pull(locator / Path("kwargs.json"), locator, workdir)
-            if not path_kwargs.is_file():
+            path_result = workdir / clerk.pull(locator / Path("result.json"), locator, workdir)
+            todo_job = False
+
+            # If kwargs present, we'll assume the job has been executed before.
+            expected_kwargs = clerk.localize(kwargs, locator, workdir)
+            if path_kwargs.is_file():
+                # If kwargs inconsistent -> refresh or raise exception
+                with open(path_kwargs) as f:
+                    found_kwargs = json.load(f)
+                unstruct_kwargs = unstructure(expected_kwargs)
+                if found_kwargs is None:
+                    # It is assumed that the old kwargs.json is manually flagged as outdated
+                    # and safe to be refreshed.
+                    print(f"Rewriting nullified kwargs.json in {locator}")
+                    with open(workdir / "kwargs.json", "w") as f:
+                        json.dump(unstruct_kwargs, f)
+                    clerk.push("kwargs.json", locator, workdir)
+                elif found_kwargs != unstruct_kwargs:
+                    with open(workdir / "kwargs-new.json", "w") as f:
+                        json.dump(unstruct_kwargs, f)
+                    clerk.push("kwargs-new.json", locator, workdir)
+                    raise ValueError(
+                        f"Existing kwarg.json in {locator} inconsistent with new kwargs. "
+                        "Added kwargs-new.json for comparison."
+                    )
+            else:
                 # Check for the presence of a result.json file,
                 # If present, this would suggest a broken state of the job
-                path_result = workdir / clerk.pull(locator / Path("result.json"), locator, workdir)
                 if path_result.is_file():
                     raise ValueError(f"Found result.json in {locator} while kwargs.json is absent.")
-                return False
+                todo_job = True
 
-            # If kwargs inconsistent -> refresh or raise exception
-            with open(path_kwargs) as f:
-                found_kwargs = json.load(f)
-            expected_kwargs = clerk.localize(kwargs, locator, workdir)
-            unstruct_kwargs = unstructure(expected_kwargs)
-            if found_kwargs is None:
-                # It is assumed that the old kwargs.json is manually flagged as outdated
-                # and safe to be refreshed.
-                print(f"Rewriting nullified kwargs.json in {locator}")
-                with open(workdir / "kwargs.json", "w") as f:
-                    json.dump(unstruct_kwargs, f)
-                clerk.push("kwargs.json", locator, workdir)
-            elif found_kwargs != unstruct_kwargs:
-                with open(workdir / "kwargs-new.json", "w") as f:
-                    json.dump(unstruct_kwargs, f)
-                clerk.push("kwargs-new.json", locator, workdir)
-                raise ValueError(
-                    f"Existing kwarg.json in {locator} inconsistent with new kwargs. "
-                    "Added kwargs-new.json for comparison."
-                )
-
-            # If hashes file (even if it should be empty) is missing -> raise exception
+            # If hashes file is present, even if empty, it should match the computed hashes.
+            # If missing -> recreate.
             path_sha256 = workdir / clerk.pull(locator / Path("kwargs.sha256"), locator, workdir)
             expected_hashes = compute_hashes(expected_kwargs, workdir)
             if path_sha256.is_file():
@@ -334,24 +255,70 @@ class Job(MetaFuncBase):
                 dump_hashes(workdir / "kwargs.sha256", expected_hashes)
                 clerk.push("kwargs.sha256", locator, workdir)
 
-            return True
+            if todo_job:
+                print(f"Starting {locator}")
 
-        return self._in_workdir(run, clerk, locator, kwargs)
+                # Define useful environment variable
+                parman_env = env | {"PARMAN_WORKDIR": os.getcwd()}
+                write_sh_env(workdir / "jobenv.sh", parman_env)
 
-    def _in_workdir(
-        self, run: callable, clerk: ClerkBase, locator: str | Path, kwargs: dict[str, Any]
-    ) -> dict[str, Any]:
-        """Internal method for running something in a job work directory."""
-        result_api = type_api_from_mock(self.mock_func(**kwargs))
-        with clerk.workdir(locator) as workdir:
-            path_result = workdir / clerk.pull(locator / Path("result.json"), locator, workdir)
-            success = run(workdir)
-            if success and path_result.exists():
+                # Initialize the work directory
+                shutil.copytree(self.template, workdir, dirs_exist_ok=True)
+                local_kwargs = clerk.localize(kwargs, locator, workdir)
+                with open(workdir / "kwargs.json", "w") as f:
+                    json.dump(unstructure(local_kwargs), f)
+                dump_hashes(workdir / "kwargs.sha256", compute_hashes(local_kwargs, workdir))
+
+                # Run the job
+                fn_out = workdir / f"{script}.out"
+                fn_err = workdir / f"{script}.err"
+                try:
+                    with open(fn_out, "w") as fo, open(fn_err, "w") as fe:
+                        subprocess.run(
+                            f"./{script}",
+                            stdin=subprocess.DEVNULL,
+                            stdout=fo,
+                            stderr=fe,
+                            shell=True,
+                            cwd=workdir,
+                            check=True,
+                            env=os.environ | parman_env,
+                        )
+                except subprocess.CalledProcessError as exc:
+                    if fn_err.is_file():
+                        with open(fn_err) as f:
+                            sys.stderr.write(f.read())
+                    raise RuntimeError(f"Script {locator} failed: {script}.") from exc
+
+                # When we got here, the job ran without raising an exception.
+                clerk.push("kwargs.json", locator, workdir)
+                clerk.push("kwargs.sha256", locator, workdir)
+                clerk.push(script, locator, workdir)
+                clerk.push(f"{script}.out", locator, workdir)
+                clerk.push(f"{script}.err", locator, workdir)
+
+                # There may be some extra files, not explicitly included in the results,
+                # worth keeping.
+                clerk.push("jobinfo.py", locator, workdir)
+                fn_extra = workdir / "result.extra"
+                if fn_extra.is_file():
+                    with open(fn_extra) as f:
+                        for line in f:
+                            line = strip_line(line)
+                            if len(line) > 0:
+                                clerk.push(line.strip(), locator, workdir)
+                    clerk.push("result.extra", locator, workdir)
+
+            if path_result.exists():
                 clerk.push("result.json", locator, workdir)
                 with open(path_result) as f:
-                    result = structure("result", json.load(f), result_api)
-                    return clerk.globalize(result, locator, workdir)
-            return NotImplemented
+                    result_local = structure("result", json.load(f), result_api)
+                    result = clerk.globalize(result_local, locator, workdir)
+            else:
+                raise OSError(f"No result.json after completion of {locator}")
+
+        print(f"Completed {locator}")
+        return result
 
     def get_parameters_api(
         self,

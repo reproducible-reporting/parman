@@ -43,19 +43,14 @@ class MockMetaFunc(MetaFuncBase):
 
     def __call__(self, arg: int) -> int:
         if self.too_early:
-            raise AssertionError("Meta func called before dependency is met.")
+            raise AssertionError("Called MetaFunc too early.")
         return 2 * arg
-
-    def cached_result(self, arg: int) -> int:
-        if self.too_early:
-            raise AssertionError("Cached result should not be accessed.")
-        return NotImplemented
 
     def get_result_mock(self, arg: int) -> int:
         return 0
 
 
-def test_cached_result_wait_args():
+def test_result_wait_args():
     keep_sleeping = KeepSleeping()
     with ThreadPoolExecutor(max_workers=1) as executor:
         future = executor.submit(keep_sleeping)

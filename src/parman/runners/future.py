@@ -63,12 +63,8 @@ class FutureRunnerBase(RunnerBase):
             future = self._scheduler.submit([closure], {}, dependencies)
         else:
             future = self._submit(closure)
-        if isinstance(future, Future):
-            self._futures.append(future)
-            result = _promise_data(future, self.wait_graph, closure.get_result_api())
-        else:
-            result = future
-        return result
+        self._futures.append(future)
+        return _promise_data(future, self.wait_graph, closure.get_result_api())
 
     def _unpack_data(self, closure):
         """Recursively transform Futures into actual results."""

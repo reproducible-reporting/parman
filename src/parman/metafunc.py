@@ -88,14 +88,6 @@ class MetaFuncBase:
     def get_signature(self):
         return inspect.signature(self.__call__)
 
-    def cached_result(self, *args, **kwargs) -> Any:
-        """Return a cached result in case recomputation can be avoided.
-
-        This should give the same result as __call__, but fast enough for the main process.
-        When no cached result is available, NotImplemented is returned.
-        """
-        return NotImplemented
-
     def get_parameters_api(self, *args, **kwargs) -> dict[str, Any]:
         """A method returning API details for function parameters.
 

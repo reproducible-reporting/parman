@@ -59,10 +59,6 @@ class Closure:
         validate("result", result, result_api)
         return result
 
-    def cached_result(self) -> Any:
-        """Get the cached result."""
-        return self.metafunc.cached_result(*self.args, **self.kwargs)
-
     def get_parameters(self) -> dict[str, Any]:
         """Return a dictionary with all parameters (including positional ones)."""
         signature = self.metafunc.get_signature()

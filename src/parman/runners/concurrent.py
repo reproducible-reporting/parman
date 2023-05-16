@@ -42,13 +42,9 @@ class ConcurrentRunner(FutureRunnerBase):
 
     def _submit(self, closure: Closure) -> Future:
         closure = self._unpack_data(closure)
-        result = closure.cached_result()
-        if result is NotImplemented:
-            print(f"Submitting {closure.describe()}")
-            with self._submit_lock:
-                return self.executor.submit(Closure.validated_call, closure)
-        print(f"Reusing {closure.describe()}")
-        return result
+        print(f"Submitting {closure.describe()}")
+        with self._submit_lock:
+            return self.executor.submit(Closure.validated_call, closure)
 
     def shutdown(self):
         """Wait for all futures to complete."""

@@ -38,7 +38,6 @@ def test_basics():
     assert metafunc.describe() == "compute_sum"
     assert metafunc(1) == 3
     assert metafunc.get_signature() == inspect.signature(compute_sum)
-    assert metafunc.cached_result("does", "not", "matter") == NotImplemented
     assert metafunc.get_parameters_api() == {"first": int, "second": int}
     assert metafunc.get_result_mock(1, 3) == 42
     assert metafunc.get_result_api(1, 3) == int
