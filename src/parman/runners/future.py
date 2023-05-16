@@ -53,22 +53,21 @@ class FutureRunnerBase(RunnerBase):
             self._scheduler = Scheduler(self._submit, self.wait_graph)
 
     def __call__(self, closure: Closure) -> Any:
-        result = closure.cached_result()
-        if result is NotImplemented:
-            if self.schedule:
-                dependencies = []
-                for data in closure.args, closure.kwargs:
-                    for _, leaf in iterate_tree(data):
-                        if isinstance(leaf, Future):
-                            dependencies.append(leaf)
-                print(f"Scheduling {closure.describe()} after {len(dependencies)} futures")
-                future = self._scheduler.submit([closure], {}, dependencies)
-            else:
-                future = self._submit(closure)
+        if self.schedule:
+            dependencies = []
+            for data in closure.args, closure.kwargs:
+                for _, leaf in iterate_tree(data):
+                    if isinstance(leaf, Future):
+                        dependencies.append(leaf)
+            print(f"Scheduling {closure.describe()} after {len(dependencies)} futures")
+            future = self._scheduler.submit([closure], {}, dependencies)
+        else:
+            future = self._submit(closure)
+        if isinstance(future, Future):
             self._futures.append(future)
             result = _promise_data(future, self.wait_graph, closure.get_result_api())
         else:
-            print(f"Reusing {closure.describe()}")
+            result = future
         return result
 
     def _unpack_data(self, closure):
@@ -110,11 +109,15 @@ def _wait_for_data(data: Any) -> Any:
     )
 
 
+class FutureNotDone(RuntimeError):
+    pass
+
+
 def _validate_done(needed_for: str, data: Any) -> Any:
     """Validate that all futures (nested recursively) are done."""
     for mulidx, leaf in iterate_tree(data):
         if isinstance(leaf, Future) and not leaf.done():
-            raise RuntimeError(
+            raise FutureNotDone(
                 f"Trying to get an unavailable result for argument {mulidx} of {needed_for}."
             )
 
