@@ -84,11 +84,6 @@ from .treeleaf import iterate_tree, transform_tree
 __all__ = ("job", "structure", "unstructure")
 
 
-# The following can be removed once cattrs 23 is released:
-# See https://github.com/python-attrs/cattrs/issues/81
-cattrs.register_structure_hook(Path, lambda d, t: Path(d))
-cattrs.register_unstructure_hook(Path, lambda d: str(d))
-
 # Support for None and NoneType can be convenient
 # See https://github.com/python-attrs/cattrs/issues/346
 cattrs.register_structure_hook(NoneType, lambda d, t: None)
@@ -251,7 +246,6 @@ class Job(MetaFuncBase):
                         "Added kwargs-new.sha256 for comparison."
                     )
             else:
-                print(f"Rewriting removed kwargs.sha256 in {locator}")
                 dump_hashes(workdir / "kwargs.sha256", expected_hashes)
                 clerk.push("kwargs.sha256", locator, workdir)
 

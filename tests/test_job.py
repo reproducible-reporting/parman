@@ -143,3 +143,71 @@ def test_write_sh_env_exceptions(tmp_path: Path):
         write_sh_env(path_rc, {"": "z"})
     with pytest.raises(ValueError):
         write_sh_env(path_rc, {1: "z"})
+
+
+NONE_JOBINFO = """
+def mock(first: int, second: int = 2) -> int:
+    return None
+"""
+
+NONE_RUN = """\
+#!/usr/bin/env python
+
+import json
+import os
+
+
+def main():
+    with open("kwargs.json") as f:
+        kwargs = json.load(f)
+
+    with open("result.json", "w") as f:
+        f.write("null")
+
+
+if __name__ == "__main__":
+    main()
+"""
+
+
+def test_none(tmp_path: Path):
+    job, template_path = setup_jobfactory(tmp_path, NONE_JOBINFO, NONE_RUN)
+    closure = job(template_path, "sample", first=1, second=3)
+    result = closure.validated_call()
+    assert result is None
+
+
+PATH_JOBINFO = """
+from pathlib import Path
+def mock(some_input: Path) -> Path:
+    return Path("__foo__")
+"""
+
+PATH_RUN = """\
+#!/usr/bin/env python
+
+import json
+import os
+
+
+def main():
+    with open("kwargs.json") as f:
+        kwargs = json.load(f)
+
+    with open("result.json", "w") as f:
+        json.dump("some_output.txt", f)
+
+
+if __name__ == "__main__":
+    main()
+"""
+
+
+def test_path(tmp_path: Path):
+    job, template_path = setup_jobfactory(tmp_path, PATH_JOBINFO, PATH_RUN)
+    (tmp_path / "results").mkdir()
+    with open(tmp_path / "results/some_input.txt", "w") as f:
+        f.write("foo bar\n")
+    closure = job(template_path, "sample", some_input=Path("some_input.txt"))
+    result = closure.validated_call()
+    assert result == Path("sample/some_output.txt")

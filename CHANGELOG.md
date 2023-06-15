@@ -21,6 +21,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed mistake in `jobdemo` example (writing `result.extra`).
 - Add support for `None` return value in jobs.
 
+### Changed
+
+- Update [`cattrs`](https://github.com/python-attrs/cattrs) dependency to `>=23.1.2`.
+
+
 ## [0.2.0] - 2023-05-07
 
 ### Added
