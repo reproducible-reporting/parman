@@ -32,6 +32,7 @@ Changelog = "https://github.com/reproducible-reporting/parman/blob/main/CHANGELO
 
 [project.scripts]
 parman-sbatch-wait = "parman.scripts.sbatch_wait:main"
+parman-clean-results = "parman.scripts.clean_results:main"
 
 [tool.black]
 line-length = 100
