@@ -427,10 +427,11 @@ def compute_hashes(data: Any, workdir: Path) -> dict[str, str]:
         if isinstance(leaf, Path):
             sha = hashlib.sha256()
             with open(workdir / leaf, "rb") as f:
-                block = f.read(1048576)
-                if block is None:
-                    break
-                sha.update(block)
+                while True:
+                    block = f.read(1048576)
+                    if len(block) == 0:
+                        break
+                    sha.update(block)
             result[str(leaf)] = sha.hexdigest()
     return result
 
