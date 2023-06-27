@@ -26,7 +26,7 @@ as a base class.
 As a result, WaitFuture instances can also be used as dependencies.
 """
 
-from collections.abc import Collection
+from collections.abc import Callable, Collection
 from concurrent.futures import Future
 from threading import Lock
 
@@ -42,7 +42,7 @@ class WaitFuture(Future):
     Use `WaitGraph.submit` instead.
     """
 
-    _digest: callable
+    _digest: Callable
     _dependencies: tuple[Future]
 
     def __init__(self, dependencies: Collection[Future], digest=None):
@@ -108,7 +108,9 @@ class WaitGraph:
     _before: dict[WaitFuture, set[Future]] = attrs.field(init=False, default=attrs.Factory(dict))
     _after: dict[Future, set[WaitFuture]] = attrs.field(init=False, default=attrs.Factory(dict))
 
-    def submit(self, dependencies: Collection[Future], digest: callable = None) -> WaitFuture:
+    def submit(
+        self, dependencies: Collection[Future], digest: Callable | None = None
+    ) -> WaitFuture:
         """Create and register a new wait_future.
 
         Note that this does not create a new thread.

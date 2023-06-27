@@ -33,7 +33,7 @@ be recursed into.
 """
 
 
-from collections.abc import Generator, Iterator
+from collections.abc import Callable, Generator, Iterator
 from typing import Any
 
 __all__ = ("get_tree", "iterate_tree", "transform_tree", "same")
@@ -106,7 +106,7 @@ def iterate_tree(*trees: Any) -> Generator[tuple[tuple, Any], None, None]:
             yield (), trees
 
 
-def transform_tree(transform: callable, *trees: Any, _mulidx: tuple = ()) -> Any:
+def transform_tree(transform: Callable, *trees: Any, _mulidx: tuple = ()) -> Any:
     """Transform one or more trees elementwise into a new one.
 
     Parameters

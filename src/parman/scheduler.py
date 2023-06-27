@@ -28,7 +28,7 @@ As a result, also ScheduledFuture instances can also be used as dependencies.
 
 
 import weakref
-from collections.abc import Collection, Mapping
+from collections.abc import Callable, Collection, Mapping
 from concurrent.futures import Future
 from queue import SimpleQueue
 from threading import Lock, Thread
@@ -121,7 +121,7 @@ class Scheduler:
     """
 
     # Submit a future with given *args and **kwargs.
-    user_submit: callable = attrs.field()
+    user_submit: Callable = attrs.field()
     # wait_graph used wait for multiple dependencies.
     wait_graph: WaitGraph = attrs.field(default=attrs.Factory(WaitGraph))
 
@@ -156,7 +156,7 @@ class Scheduler:
         self.shutdown()
 
     def submit(
-        self, args: Collection, kwargs: Mapping, dependencies: Collection[Future] = None
+        self, args: Collection, kwargs: Mapping, dependencies: Collection[Future] | None = None
     ) -> ScheduledFuture:
         """Schedule a future for later submission to an executor.
 

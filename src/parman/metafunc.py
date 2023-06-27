@@ -42,6 +42,7 @@ but this may be overriden for more advanced type checks.
 
 import inspect
 import types
+from collections.abc import Callable
 from typing import Any
 
 import attrs
@@ -206,8 +207,8 @@ def type_api_from_mock(mock_api):
 class MinimalMetaFunc(MetaFuncBase):
     """A bare-bones implementation of MetaFuncBase without caching."""
 
-    function: callable = attrs.field()
-    mock: callable = attrs.field(default=None)
+    function: Callable = attrs.field()
+    mock: Callable = attrs.field(default=None)
 
     def describe(self, *args, **kwargs) -> str:
         """Describe this metafunc."""

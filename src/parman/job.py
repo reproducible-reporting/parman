@@ -68,6 +68,7 @@ import string
 import subprocess
 import sys
 import types
+from collections.abc import Callable
 from pathlib import Path
 from types import NoneType
 from typing import Any
@@ -111,8 +112,8 @@ class Job(MetaFuncBase):
     template: Path = attrs.field()
     jobinfo_source: str = attrs.field()
     resources: dict[str, Any] = attrs.field(init=False)
-    parameters_func: callable = attrs.field(init=False)
-    mock_func: callable = attrs.field(init=False)
+    parameters_func: Callable = attrs.field(init=False)
+    mock_func: Callable = attrs.field(init=False)
 
     def __getstate__(self):
         """Return state for pickle"""

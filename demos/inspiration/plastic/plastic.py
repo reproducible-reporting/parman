@@ -92,7 +92,7 @@ FC_FACTOR = 5.0 * units.Hartree / units.Bohr**2
 class PlasticCalculator(Calculator):
     """A very very approximate force field parameterized by an initial geometry."""
 
-    implemented_properties = ["energy", "forces"]
+    implemented_properties = ("energy", "forces")
 
     def __init__(self, atoms, cutoff):
         """Instantiate a PlasticCalculator."""
