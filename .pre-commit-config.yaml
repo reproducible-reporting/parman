@@ -29,10 +29,10 @@ repos:
   hooks:
     - id: black
 - repo: https://github.com/charliermarsh/ruff-pre-commit
-  rev: 'v0.0.272'
+  rev: 'v0.0.275'
   hooks:
     - id: ruff
 - repo: https://github.com/python-jsonschema/check-jsonschema
-  rev: 0.23.1
+  rev: 0.23.2
   hooks:
     - id: check-github-workflows
