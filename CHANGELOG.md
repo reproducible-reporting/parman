@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - New utility script to remove unfinished jobs from a results directory: `parman-clean-results`.
+- Environment variable `PARMAN_SBATCH_WAIT_LOW` can be set to a minimal waiting time between
+  to `scontrol` calls in the `parman-sbatch-wait` script.
 
 ## [0.3.1] - 2023-06-15
 

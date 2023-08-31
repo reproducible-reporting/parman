@@ -19,6 +19,7 @@
 # --
 """An sbatch wrapper to submit only on the first call, and to wait until a job has finished."""
 
+import os
 import random
 import re
 import subprocess
@@ -74,8 +75,9 @@ def submit_once_and_wait(path_log, sbatch_args):
     # See https://bugs.schedmd.com/show_bug.cgi?id=14638
     # The maximum sleep time between two calls in `sbatch --wait` is 32 seconds.
     # See https://github.com/SchedMD/slurm/blob/master/src/sbatch/sbatch.c
-    # Here, we take a random sleep time between 30 and 60 seconds to play nice.
+    # Here, we take a random sleep time, by default between 30 and 60 seconds to play nice.
     last_status = None
+    sleep_seconds_low = int(os.getenv("PARMAN_SBATCH_WAIT_LOW", "30"))
     while True:
         status = read_step(previous_lines)
         if status is None:
@@ -84,7 +86,7 @@ def submit_once_and_wait(path_log, sbatch_args):
                 sleep_seconds = 1
                 print(f"# Sleep {sleep_seconds}")
             else:
-                sleep_seconds = random.randint(30, 60)
+                sleep_seconds = random.randint(sleep_seconds_low, sleep_seconds_low + 30)
             sleep(sleep_seconds)
             # Call scontrol and parse its response.
             status = wait_for_status(jobid, cluster)
