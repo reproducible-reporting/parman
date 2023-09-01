@@ -34,9 +34,9 @@ FIRST_LINE = "Parman sbatch wait log format version 1"
 SCONTROL_FAILED = "The command `scontrol show job` failed!\n"
 DEFAULT_FN_LOG = "sbatchwait.log"
 DEBUG = False
-TIME_MARGIN = int(os.getenv("PARMAN_SBATCH_TIME_MARGIN", "10"))
-POLLING_INTERVAL = int(os.getenv("PARMAN_SBATCH_POLLING_INTERVAL", "10"))
 CACHE_TIMEOUT = int(os.getenv("PARMAN_SBATCH_CACHE_TIMEOUT", "30"))
+POLLING_INTERVAL = int(os.getenv("PARMAN_SBATCH_POLLING_INTERVAL", "10"))
+TIME_MARGIN = int(os.getenv("PARMAN_SBATCH_TIME_MARGIN", "5"))
 
 
 def main(path_log=None):
@@ -112,20 +112,39 @@ Submit a job with sbatch only once. Wait for it to complete (or fail).
 All command-line arguments are passed to sbatch, with `--parsable` in front.
 Run `sbatch -h` for details.
 
+This script will wait for the job to complete, just like `sbatch --wait`.
+Unlike `sbatch --wait`, it can also wait for a previously submitted job to complete.
+This can be useful when the wait script gets killed for some reason.
+
 The screen output shows the current status of the job,
 which is also written to and read from a file called `{path_log}`.
 (You can only submit one job from a given directory.)
 This script will not resubmit a job if `{path_log}` exists.
-Remove this log to make this script forget about the initial job submission.
+Instead, it will wait for the job to complete without resubmission.
+Remove `{path_log}` to make this script forget about the initial job submission.
 
 Note that the timestamps in the log file have a low resolution of about 1 minute.
-The job state is only checked every 30--60 seconds so as not to overload the Job Scheduler.
+The job state is only checked every 30--40 seconds so as not to overload the Job Scheduler.
 Information from `{path_log}` is maximally reused to avoid unnecessary `scontrol` calls.
 
-This script will wait for the job to complete, just like `sbatch --wait`.
-Unlike sbatch, it can also wait for a previously submitted job to complete.
-This can be useful when the wait script gets killed for some reason.
-"""
+The status of the job is inferred from `scontrol show job`, if relevant with a `--cluster`
+argument. To further minimize the number of `scontrol` calls in a parallel workflow,
+its output is cached and stored under `~/.cache/parman`. The cached results are reused by
+all instances of this script, such that the number of `scontrol` calls is independent of the
+number of jobs running in parallel.
+
+The time between two `scontrol` calls (per cluster) can be controlled with the
+environment variable `PARMAN_SBATCH_CACHE_TIMEOUT`, which is "30" (seconds) by default.
+Increase this value if you want to reduce the burden on Slurm.
+
+The cached output of `scontrol` is checked with a randomized polling interval.
+The randomization guarantees that concurrent calls to `scontrol` (for multiple clusters)
+do not all coincide.
+The polling time can be controlled with two additional environment variables:
+
+- `PARMAN_SBATCH_POLLING_INTERVAL` = the minimal polling interval in seconds, default is "10".
+- `PARMAN_SBATCH_TIME_MARGIN` = the with of the uniform distribution for the polling interval
+  in seconds, default is "5"."""
 
 
 def parse_args(path_log):

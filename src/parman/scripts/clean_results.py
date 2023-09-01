@@ -40,7 +40,10 @@ def main():
 
 
 def parse_args():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        prog="parman-clean-results",
+        description="Remove results directories lacking a result.json file.",
+    )
     parser.add_argument("results", help="The results directory.")
     parser.add_argument("-n", "--dry-run", default=False, action="store_true")
     return parser.parse_args()
