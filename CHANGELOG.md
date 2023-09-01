@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+(nothing yet)
+
+## [0.4.0] - 2023-09-01
+
 ### Fixed
 
 - Fix mistake in computation of SHA256 hash: now it reads the entire file.
