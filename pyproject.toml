@@ -21,7 +21,7 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
 ]
-dependencies = ["attrs", "cattrs>=23.1.2"]
+dependencies = ["attrs", "cattrs>=23.1.2", "portalocker"]
 dynamic = ["version"]
 
 [project.urls]

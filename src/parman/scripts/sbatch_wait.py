@@ -24,13 +24,19 @@ import random
 import re
 import subprocess
 import sys
+import time
 from datetime import datetime
 from pathlib import Path
-from time import sleep
+
+import portalocker
 
 FIRST_LINE = "Parman sbatch wait log format version 1"
+SCONTROL_FAILED = "The command `scontrol show job` failed!\n"
 DEFAULT_FN_LOG = "sbatchwait.log"
 DEBUG = False
+TIME_MARGIN = int(os.getenv("PARMAN_SBATCH_TIME_MARGIN", "10"))
+POLLING_INTERVAL = int(os.getenv("PARMAN_SBATCH_POLLING_INTERVAL", "10"))
+CACHE_TIMEOUT = int(os.getenv("PARMAN_SBATCH_CACHE_TIMEOUT", "30"))
 
 
 def main(path_log=None):
@@ -58,12 +64,15 @@ def submit_once_and_wait(path_log, sbatch_args):
             f.write(FIRST_LINE + "\n")
 
     # Go through or skip steps.
-    status = read_step(previous_lines)
+    submit_time, status = read_step(previous_lines)
     if status is None:
         # A new job must be submitted.
+        submit_time = time.time()
         sbatch_stdout = submit_job(sbatch_args)
         log_step(path_log, f"Submitted {sbatch_stdout}")
+        rndsleep()
     else:
+        # The first step, if present in the log, is the submission.
         step, sbatch_stdout = status.split()
         if step != "Submitted":
             raise ValueError(f"Expected 'Submitted' in log, found '{step}'")
@@ -77,24 +86,21 @@ def submit_once_and_wait(path_log, sbatch_args):
     # See https://github.com/SchedMD/slurm/blob/master/src/sbatch/sbatch.c
     # Here, we take a random sleep time, by default between 30 and 60 seconds to play nice.
     last_status = None
-    sleep_seconds_low = int(os.getenv("PARMAN_SBATCH_WAIT_LOW", "30"))
     while True:
-        status = read_step(previous_lines)
+        # First try to replay previously logged steps
+        status_time, status = read_step(previous_lines)
         if status is None:
-            # Random sleep to avoid many scontrol calls at the same time.
-            if DEBUG:
-                sleep_seconds = 1
-                print(f"# Sleep {sleep_seconds}")
-            else:
-                sleep_seconds = random.randint(sleep_seconds_low, sleep_seconds_low + 30)
-            sleep(sleep_seconds)
+            # All previously logged steps are processed.
             # Call scontrol and parse its response.
-            status = wait_for_status(jobid, cluster)
+            rndsleep()
+            status_time, status = get_status(jobid, cluster)
             if DEBUG:
                 print(f"# {status}")
             if status is not None and status != last_status:
                 log_step(path_log, status)
-        if status not in ["PENDING", "CONFIGURING", "RUNNING"]:
+        if (status_time > submit_time + TIME_MARGIN) and (
+            status not in ["PENDING", "CONFIGURING", "RUNNING"]
+        ):
             return
         if status is not None:
             last_status = status
@@ -142,12 +148,21 @@ def check_log_version(line: str):
 def read_step(lines: list[str]) -> str | None:
     """Read a step from the log file."""
     if len(lines) == 0:
-        return None
+        return None, None
     line = lines.pop(0)
     words = line.split(maxsplit=1)
     if len(words) != 2:
         raise ValueError(f"Expected a step in log but found line '{line}'.")
-    return words[1]
+    return datetime.fromisoformat(words[0]).timestamp(), words[1]
+
+
+def rndsleep():
+    """Randomized sleep to distribute I/O load evenly."""
+    if DEBUG:
+        sleep_seconds = 1
+    else:
+        sleep_seconds = random.randint(POLLING_INTERVAL, POLLING_INTERVAL + TIME_MARGIN)
+    time.sleep(sleep_seconds)
 
 
 def submit_job(args: list[str]) -> str:
@@ -173,11 +188,6 @@ def log_step(path_log: Path, step: str):
         f.write(f"{line}\n")
 
 
-def log_info(path_log: Path, info: str):
-    """Write relevant info to the log."""
-    log_step(path_log, f"(info) {info}")
-
-
 def parse_sbatch(stdout: str) -> tuple[int, str | None]:
     """Parse the 'parsable' output of sbatch."""
     words = stdout.split(";")
@@ -188,8 +198,8 @@ def parse_sbatch(stdout: str) -> tuple[int, str | None]:
     raise ValueError(f"Cannot parse sbatch output: {stdout}")
 
 
-def wait_for_status(jobid: int, cluster: str | None) -> str | None:
-    """Call scontrol to get the status of the job.
+def get_status(jobid: int, cluster: str | None) -> str | None:
+    """Load cached scontrol output or run scontrol if outdated.
 
     Parameters
     ----------
@@ -203,26 +213,107 @@ def wait_for_status(jobid: int, cluster: str | None) -> str | None:
     status
         A status reported by scontrol.
         The "Invalid" status is returned when scontrol fails to find the jobid.
-        None is returned when scontrol fails in a way that is safe to ignore. (Try again later.)
+        None is returned when scontrol fails in a way that is safe to ignore.
+        (Try again later.)
     """
-    args = ["scontrol", "show", "job", str(jobid)]
-    if cluster is not None:
+    # Load cached output or run again
+    args = ["scontrol", "show", "job"]
+    path_out = Path(os.getenv("HOME")) / ".cache/parman"
+    if cluster is None:
+        path_out /= "sbatch_wait.out"
+    else:
         args.append(f"--cluster={cluster}")
-    cp = subprocess.run(
-        args,
-        input="",
-        capture_output=True,
-        text=True,
-    )
-    if cp.returncode == 0:
-        # Check for the expected state(s).
-        match = re.search(r"JobState=(?P<state>[A-Z]+)", cp.stdout)
-        if match is not None:
-            return match.group("state")
-    elif "Invalid job id specified" in cp.stderr:
-        # If the jobid is unknown, it is assumed that the job
-        # has long gone and has completed.
+        path_out /= f"sbatch_wait.{cluster}.out"
+    status_time, scontrol_out = cached_run(args, path_out, CACHE_TIMEOUT)
+    return status_time, parse_scontrol_out(scontrol_out, jobid)
+
+
+def cached_run(args: list[str], path_out: Path, cache_timeout) -> str:
+    """Execute a command if its previous output is outdated.
+
+    Parameters
+    ----------
+    args
+        List of command line arguments (including executable).
+    path_out
+        The path where the output is cached.
+    cache_timeout
+        The waiting time between two actual calls.
+
+    Returns
+    -------
+    stdout
+        The output of the file, either new or cached.
+
+    Notes
+    -----
+    The cached output is updated only if the command has a zero exit code.
+    In all other cases, the result of the call is ignored, assuming the error is transient.
+    """
+    if not path_out.exists():
+        path_out.parent.mkdir(parents=True, exist_ok=True)
+        path_out.touch(exist_ok=True)
+
+    with portalocker.Lock(path_out, mode="r+") as fh:
+        header = fh.read(CACHE_HEADER_LENGTH)
+        cache_time, _ = parse_cache_header(header)
+        if cache_time is None or time.time() > cache_time + cache_timeout:
+            cp = subprocess.run(args, input="", capture_output=True, text=True, check=False)
+            fh.truncate(0)
+            cache_time = time.time()
+            fh.write(make_cache_header(cache_time, cp.returncode))
+            fh.write(cp.stdout)
+            return cache_time, cp.stdout
+        return cache_time, fh.read()
+
+
+def make_cache_header(cache_time, returncode):
+    iso = datetime.fromtimestamp(cache_time).isoformat()
+    assert len(iso) == 26
+    return f"v1 datetime={iso} returncode={returncode:+04d}\n"
+
+
+def parse_cache_header(header):
+    if len(header) == 0 or header == "\x00" * CACHE_HEADER_LENGTH:
+        return None, None
+    elif len(header) == CACHE_HEADER_LENGTH:
+        print((header,))
+        if not header.startswith("v1 datetime="):
+            raise ValueError("Invalid header")
+        cache_time = datetime.fromisoformat(header[12:38]).timestamp()
+        returncode = int(header[50:54])
+        return cache_time, returncode
+    else:
+        raise ValueError(f"Cannot parse cache header: {header}")
+
+
+CACHE_HEADER_LENGTH = len(make_cache_header(time.time(), 0))
+
+
+def parse_scontrol_out(scontrol_out: str, jobid: int) -> str | None:
+    """Get the job state for a specific from from the output of ``scontrol show job``.
+
+    Parameters
+    ----------
+    scontrol_out
+        A string with the output of ``scontrol show job``.
+    jobid
+        The jobid of interest.
+
+    Returns
+    -------
+    jobstate
+        The status of the job, or None of the job cannot be found.
+    """
+    if scontrol_out == SCONTROL_FAILED:
         return "Invalid"
+    match = re.search(
+        f"JobId={jobid}.*?JobState=(?P<state>[A-Z]+)",
+        scontrol_out,
+        flags=re.MULTILINE | re.DOTALL,
+    )
+    if match is not None:
+        return match.group("state")
     return None
 
 
