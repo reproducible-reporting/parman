@@ -4,8 +4,6 @@ name: pypi upload
 
 on:
   push:
-    branches:
-    - main
     tags:
     - 'v*'
 
