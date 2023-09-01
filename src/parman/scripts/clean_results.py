@@ -27,12 +27,16 @@ from pathlib import Path
 def main():
     args = parse_args()
     root = Path(args.results)
-    for jobdir in root.glob("*"):
+    to_remove = []
+    for fn_kwargs in root.glob("**/kwargs.json"):
+        jobdir = fn_kwargs.parent
         fn_result = jobdir / "result.json"
         if not fn_result.exists():
-            print(f"Removing {jobdir}")
-            if not args.dry_run:
-                shutil.rmtree(jobdir)
+            to_remove.append(jobdir)
+    for jobdir in to_remove:
+        print(f"Removing {jobdir}")
+        if not args.dry_run and jobdir.exists():
+            shutil.rmtree(jobdir)
 
 
 def parse_args():
