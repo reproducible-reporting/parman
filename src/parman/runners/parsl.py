@@ -51,7 +51,15 @@ class ParslRunner(FutureRunnerBase):
         executors = closure.get_resources().get("parsl_executors", "all")
         print(f"Submitting {closure.describe()}")
         with self._submit_lock:
-            future = self.dfk.submit(Closure.validated_call, [closure], executors)
+            future = self.dfk.submit(
+                func=Closure.validated_call,
+                app_args=[closure],
+                executors=executors,
+                cache=False,
+                ignore_for_cache=[],
+                app_kwargs={},
+                join=False,
+            )
         return future
 
     def shutdown(self):

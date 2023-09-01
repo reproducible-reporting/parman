@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Fix mistake in computation of SHA256 hash: now it reads the entire file.
+- Update for recent change in parsl (2023.08.28):
+  some defaults were removed from `DataFlowKernel.submit` arguments,
+  which are now set explicitly in Parman.
 
 ### Added
 
