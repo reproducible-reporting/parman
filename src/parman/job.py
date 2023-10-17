@@ -112,6 +112,7 @@ class Job(MetaFuncBase):
     template: Path = attrs.field()
     jobinfo_source: str = attrs.field()
     resources: dict[str, Any] = attrs.field(init=False)
+    can_resume: bool = attrs.field(init=False)
     parameters_func: Callable = attrs.field(init=False)
     mock_func: Callable = attrs.field(init=False)
 
@@ -130,6 +131,7 @@ class Job(MetaFuncBase):
         ns = {}
         exec(self.jobinfo_source, ns)
         self.resources = ns.get("resources", {})
+        self.can_resume = ns.get("can_resume", False)
         self.parameters_func = ns.get("parameters")
         self.mock_func = ns["mock"]
 
@@ -203,7 +205,8 @@ class Job(MetaFuncBase):
             path_result = workdir / clerk.pull(locator / Path("result.json"), locator, workdir)
             todo_job = False
 
-            # If kwargs present, we'll assume the job has been executed before.
+            # If kwargs present, we'll assume the job has been started already
+            # (and possibly finished).
             expected_kwargs = clerk.localize(kwargs, locator, workdir)
             if path_kwargs.is_file():
                 # If kwargs inconsistent -> refresh or raise exception
@@ -211,6 +214,7 @@ class Job(MetaFuncBase):
                     found_kwargs = json.load(f)
                 unstruct_kwargs = unstructure(expected_kwargs)
                 if found_kwargs is None:
+                    # The file kwargs.json contains "null".
                     # It is assumed that the old kwargs.json is manually flagged as outdated
                     # and safe to be refreshed.
                     print(f"Rewriting nullified kwargs.json in {locator}")
@@ -225,6 +229,8 @@ class Job(MetaFuncBase):
                         f"Existing kwarg.json in {locator} inconsistent with new kwargs. "
                         "Added kwargs-new.json for comparison."
                     )
+                if not path_result.exists() and self.can_resume:
+                    todo_job = True
             else:
                 # Check for the presence of a result.json file,
                 # If present, this would suggest a broken state of the job
@@ -251,7 +257,10 @@ class Job(MetaFuncBase):
                 clerk.push("kwargs.sha256", locator, workdir)
 
             if todo_job:
-                print(f"Starting {locator}")
+                if self.can_resume:
+                    print(f"Starting or resuming {locator}")
+                else:
+                    print(f"Starting {locator}")
 
                 # Define useful environment variable
                 parman_env = env | {"PARMAN_WORKDIR": os.getcwd()}
@@ -303,6 +312,9 @@ class Job(MetaFuncBase):
                             if len(line) > 0:
                                 clerk.push(line.strip(), locator, workdir)
                     clerk.push("result.extra", locator, workdir)
+                print(f"Completed {locator}")
+            else:
+                print(f"Not rerunning {locator}")
 
             if path_result.exists():
                 clerk.push("result.json", locator, workdir)
@@ -312,7 +324,6 @@ class Job(MetaFuncBase):
             else:
                 raise OSError(f"No result.json after completion of {locator}")
 
-        print(f"Completed {locator}")
         return result
 
     def get_parameters_api(

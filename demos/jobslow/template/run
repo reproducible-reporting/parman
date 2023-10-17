@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+echo "Waiting a long time to test restart with running jobs"
+sleep 30
+echo '"result"' > result.json

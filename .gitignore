@@ -6,6 +6,8 @@ build
 .coverage
 .ruff_cache
 env
+venv
 tmp
 .envrc
+results
 src/parman/_version.py

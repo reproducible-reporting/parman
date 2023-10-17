@@ -7,7 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-(nothing yet)
+### Fixed
+
+- There was no way to mark a job as resumable, which made it impossible
+  to restart workflows with `parman-sbatch-wait` that still have jobs running in the queue.
+  By default, Parman will still complain and stop the workflow if `kwargs.json` is present
+  without a corresponding `result.json`.
+  If the job script is able to identify a running calculation and wait for its completion,
+  then add `can_resume = True` to the `jobinfo.py`.
+  (This is always recommended when submitting jobs with `parman-sbatch-wait`.)
+  A minimalist example can be found in `demos/jobslow`.
 
 ## [0.4.0] - 2023-09-01
 
