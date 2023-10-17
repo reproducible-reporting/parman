@@ -1,3 +1,9 @@
 #!/usr/bin/env bash
 
 python3 script.py
+
+# Note that script.py is marked as extra result for the unit tests.
+# It is not so relevant for the example.
+cat > result.extra << EOF
+script.py
+EOF

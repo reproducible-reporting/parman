@@ -7,7 +7,8 @@ python3 helper.py
 # A fake extra output file to be kept
 echo "important results" > valuable.txt
 
-# List files worth keeping
+# List files worth keeping.
+# Note that helper.py is also listed for the unit tests, not so relevant for the example.
 cat > result.extra << EOF
 valuable.txt
 helper.py
