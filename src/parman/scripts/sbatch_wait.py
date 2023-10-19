@@ -298,7 +298,6 @@ def parse_cache_header(header):
     if len(header) == 0 or header == "\x00" * CACHE_HEADER_LENGTH:
         return None, None
     elif len(header) == CACHE_HEADER_LENGTH:
-        print((header,))
         if not header.startswith("v1 datetime="):
             raise ValueError("Invalid header")
         cache_time = datetime.fromisoformat(header[12:38]).timestamp()
