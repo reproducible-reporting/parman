@@ -19,6 +19,7 @@
 # --
 """An sbatch wrapper to submit only on the first call, and to wait until a job has finished."""
 
+import fcntl
 import os
 import random
 import re
@@ -27,8 +28,6 @@ import sys
 import time
 from datetime import datetime
 from pathlib import Path
-
-import portalocker
 
 FIRST_LINE = "Parman sbatch wait log format version 1"
 SCONTROL_FAILED = "The command `scontrol show job` failed!\n"
@@ -273,7 +272,8 @@ def cached_run(args: list[str], path_out: Path, cache_timeout) -> str:
         path_out.parent.mkdir(parents=True, exist_ok=True)
         path_out.touch(exist_ok=True)
 
-    with portalocker.Lock(path_out, mode="r+") as fh:
+    with open(path_out, mode="r+") as fh:
+        fcntl.lockf(fh, fcntl.LOCK_EX)
         header = fh.read(CACHE_HEADER_LENGTH)
         cache_time, _ = parse_cache_header(header)
         if cache_time is None or time.time() > cache_time + cache_timeout:
@@ -282,6 +282,8 @@ def cached_run(args: list[str], path_out: Path, cache_timeout) -> str:
             cache_time = time.time()
             fh.write(make_cache_header(cache_time, cp.returncode))
             fh.write(cp.stdout)
+            fh.flush()
+            os.fsync(fh.fileno())
             return cache_time, cp.stdout
         return cache_time, fh.read()
 
