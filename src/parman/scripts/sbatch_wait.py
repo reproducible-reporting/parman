@@ -274,13 +274,15 @@ def cached_run(args: list[str], path_out: Path, cache_timeout) -> str:
 
     with open(path_out, mode="r+") as fh:
         fcntl.lockf(fh, fcntl.LOCK_EX)
+        fh.seek(0)
         header = fh.read(CACHE_HEADER_LENGTH)
         cache_time, _ = parse_cache_header(header)
         if cache_time is None or time.time() > cache_time + cache_timeout:
             cp = subprocess.run(args, input="", capture_output=True, text=True, check=False)
             fh.truncate(0)
             cache_time = time.time()
-            fh.write(make_cache_header(cache_time, cp.returncode))
+            header = make_cache_header(cache_time, cp.returncode)
+            fh.write(header)
             fh.write(cp.stdout)
             fh.flush()
             os.fsync(fh.fileno())
