@@ -279,6 +279,9 @@ def cached_run(args: list[str], path_out: Path, cache_timeout) -> str:
         cache_time, _ = parse_cache_header(header)
         if cache_time is None or time.time() > cache_time + cache_timeout:
             cp = subprocess.run(args, input="", capture_output=True, text=True, check=False)
+            # Go the the beginning of the file before truncating.
+            # (Possibly related to issue with zero bytes at start of file.)
+            fh.seek(0)
             fh.truncate(0)
             cache_time = time.time()
             header = make_cache_header(cache_time, cp.returncode)
