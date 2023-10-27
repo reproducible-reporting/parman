@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.2] - 2023-10-27
+
+### Fixed
+
+- File locking in the `parman-sbatch-wait` script was not working as expected,
+  which is now fixed.
+  The built-in [`fnctl`](https://docs.python.org/3/library/fcntl.html) Python module is used instead of `portalocker`.
+  This implies that the `parman-sbatch-wait` script will only work on POSIX-compliant
+  operating systems.
+
+
 ## [0.4.1] - 2023-10-17
 
 ### Fixed
@@ -19,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   then add `can_resume = True` to the `jobinfo.py`.
   (This is always recommended when submitting jobs with `parman-sbatch-wait`.)
   A minimalist example can be found in `demos/jobslow`.
+
 
 ## [0.4.0] - 2023-09-01
 
@@ -37,11 +49,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Environment variable `PARMAN_SBATCH_CACHE_TIMEOUT` can be set to a minimal waiting time between
   two `scontrol` calls in the `parman-sbatch-wait` script.
 
+
 ## [0.3.1] - 2023-06-15
 
 ### Fixed
 
 - Fix PyPI mistake. 0.3.0 will be yanked.
+
 
 ## [0.3.0] - 2023-06-15
 
@@ -84,6 +98,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - API change: names changed in `jobinfo.py`:
   - `get_result_mock` -> `mock`
   - `get_parameters_api` -> `parameters`
+
 
 ## [0.1.0] - 2023-05-02
 
