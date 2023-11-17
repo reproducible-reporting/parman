@@ -20,7 +20,7 @@
 """Parman package."""
 
 try:
-    from _version import __version__
+    from ._version import __version__
 except ImportError:
     __version__ = "0.0.0a-dev"
     __version_tuple__ = (0, 0, 0, "a-dev")
