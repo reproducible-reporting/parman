@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Fix version info.
+- Fixed readability of JSON files: indent with two spaces
 
 
 ## [0.4.2] - 2023-10-27

@@ -219,11 +219,11 @@ class Job(MetaFuncBase):
                     # and safe to be refreshed.
                     print(f"Rewriting nullified kwargs.json in {locator}")
                     with open(workdir / "kwargs.json", "w") as f:
-                        json.dump(unstruct_kwargs, f)
+                        json.dump(unstruct_kwargs, f, indent=2)
                     clerk.push("kwargs.json", locator, workdir)
                 elif found_kwargs != unstruct_kwargs:
                     with open(workdir / "kwargs-new.json", "w") as f:
-                        json.dump(unstruct_kwargs, f)
+                        json.dump(unstruct_kwargs, f, indent=2)
                     clerk.push("kwargs-new.json", locator, workdir)
                     raise ValueError(
                         f"Existing kwarg.json in {locator} inconsistent with new kwargs. "
@@ -270,7 +270,7 @@ class Job(MetaFuncBase):
                 shutil.copytree(self.template, workdir, dirs_exist_ok=True)
                 local_kwargs = clerk.localize(kwargs, locator, workdir)
                 with open(workdir / "kwargs.json", "w") as f:
-                    json.dump(unstructure(local_kwargs), f)
+                    json.dump(unstructure(local_kwargs), f, indent=2)
                 dump_hashes(workdir / "kwargs.sha256", compute_hashes(local_kwargs, workdir))
 
                 # Run the job
