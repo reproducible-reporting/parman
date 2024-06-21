@@ -6,6 +6,7 @@ from pathlib import Path
 
 
 def main():
+    """Main program of job."""
     print("loading kwargs file")
     with open("kwargs.json") as f:
         kwargs = json.load(f)
@@ -14,7 +15,8 @@ def main():
     for model in kwargs["models"]:
         # Just checking the presence of the file.
         # A Realistic example would load and use it.
-        assert Path(model).is_file()
+        if not Path(model).is_file():
+            raise AssertionError(f"Path {model} is not a file.")
 
     print("sampling new configurations")
     configs = []

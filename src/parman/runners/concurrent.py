@@ -41,6 +41,7 @@ class ConcurrentRunner(FutureRunnerBase):
             self.executor = ThreadPoolExecutor()
 
     def _submit(self, closure: Closure) -> Future:
+        """Submit a closure to the executor."""
         closure = self._unpack_data(closure)
         print(f"Submitting {closure.describe()}")
         with self._submit_lock:

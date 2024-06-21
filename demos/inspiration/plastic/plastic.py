@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Simple plastic deformation of initial molecular geometries.
+r"""Simple plastic deformation of initial molecular geometries.
 
 The goal of this script is to go a bit beyond the simple randomization of Cartesian coordinates.
 MD is performed on a primitive potential energy surface, inspired by elastic network models.
@@ -105,9 +105,10 @@ class PlasticCalculator(Calculator):
         self._pairs = (idxs0, idxs1)
         self._dists_eq = dists
         self._shifts = shifts
-        # The following is known as Bager's rule:
+        # The following is known as Badger's rule:
         self._fcs = FC_FACTOR / dists**3
         self._radii = np.array([ase.data.vdw_radii[atom.number] for atom in atoms]) * 0.9
+        self.atoms = atoms.copy()  # for caching of results
 
     def calculate(self, atoms, properties, system_changes):
         """Calculate the potential energy and the forces."""
@@ -121,7 +122,6 @@ class PlasticCalculator(Calculator):
 
 def _calculate_low(atoms, pairs, dists_eq, shifts, fcs, radii):
     """Directly compute the energy and forces."""
-
     # Initialize a few things
     atcoords = atoms.get_positions()
     forces = np.zeros_like(atcoords)
@@ -148,7 +148,6 @@ def _calculate_low(atoms, pairs, dists_eq, shifts, fcs, radii):
 
 def _calculate_springs(pairs, fcs, dists_eq, shifts, dists_a, deltas_a, forces):
     """Always-active springs (within cutoff initially)"""
-
     # Harmonic springs are ok-ish.
     # energy += 0.5 * (fcs * (dists_a - dists_eq)**2).sum()
     # derivs_a = fcs * (dists_a - dists_eq)
@@ -199,6 +198,7 @@ def simulate(fn_initial, fn_traj, fn_final, cutoff, temperature, steps, stride):
     dyn = Langevin(atoms, 0.5 * units.fs, friction=0.01, temperature_K=temperature)
 
     def log():
+        """Write terminal output."""
         time = dyn.get_time() / (1000 * units.fs)
         epot = atoms.get_potential_energy()
         ekin = atoms.get_kinetic_energy()

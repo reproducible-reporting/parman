@@ -66,7 +66,8 @@ class MetaFuncBase:
     Subclasses override the following methods:
 
     - ``describe`` (optional, highly recommended)
-    - ``__call__`` (mandatory),
+    - ``__call__`` (mandatory)
+    - ``get_signature`` (optional)
     - ``get_parameters_api`` (optional)
       The default behavior is to deduce the signature from the __call__ method,
       but this may be modified in subclasses.
@@ -87,6 +88,7 @@ class MetaFuncBase:
         raise NotImplementedError
 
     def get_signature(self):
+        """Return the `inspect.Signature` object of the callable."""
         return inspect.signature(self.__call__)
 
     def get_parameters_api(self, *args, **kwargs) -> dict[str, Any]:
@@ -196,6 +198,7 @@ def type_api_from_mock(mock_api):
     """Derive a type_api (suitable for the validate function) from example data, mock_api."""
 
     def transform(_, mock_leaf):
+        """Get the type of a leaf, raise error if it is already a type."""
         if isinstance(mock_leaf, type):
             raise TypeError("A mock result cannot contain types.")
         return type(mock_leaf)

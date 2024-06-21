@@ -129,6 +129,7 @@ def plot_traj(fn_png: str, burnin: int, traj_x: NDArray[np.float64], traj_lp: ND
     """Plot the trajectory of an MC chain."""
 
     def plot_lp(ax):
+        """Plot the log posterior probability as a function of MC iteration."""
         ax.plot(traj_lp)
         ax.axvline(burnin, color="k", alpha=0.5)
         ax.set_ylim(traj_lp[burnin:].min(), traj_lp[burnin:].max())
@@ -136,6 +137,7 @@ def plot_traj(fn_png: str, burnin: int, traj_x: NDArray[np.float64], traj_lp: ND
         ax.set_xlabel("MC Sample")
 
     def plot_x(ax):
+        """Plot the parameters as a function of MC iteration."""
         ax.axvline(burnin, color="k", alpha=0.5)
         for traj_comp in traj_x.T:
             ax.plot(traj_comp)

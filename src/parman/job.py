@@ -406,6 +406,7 @@ def structure(prefix: str, json_data: Any, data_api: Any) -> Any:
     """
 
     def transform(mulidx, json_leaf, leaf_api):
+        """Convert an unstructured leaf to a structured one."""
         if not isinstance(leaf_api, type | types.GenericAlias):
             raise TypeError(
                 f"{prefix} at {mulidx}: cannot structure type {leaf_api}, leaf = {json_leaf}"
@@ -476,7 +477,18 @@ def strip_line(line: str):
     return line.strip()
 
 
-def write_sh_env(path_rc, env):
+def write_sh_env(path_rc: str, env: dict[str, str]):
+    """Write a resource configuration file to simulate the environment in which the job runs.
+
+    The resulting file can be sourced in a bash shell.
+
+    Parameters
+    ----------
+    path_rc
+        The file to be written.
+    env
+        A dictionary with environment variables to include.
+    """
     with open(path_rc, "w") as f:
         for key, value in env.items():
             if not (isinstance(key, str) and re.match("[_a-zA-Z][_a-zA-Z0-9]*", key)):
@@ -495,13 +507,13 @@ class JobFactory:
 
     def __call__(self, template: str, locator: str, **kwargs) -> Closure:
         """Create a new job with the locator and keyword arguments."""
-        job = self._cache.get(template)
-        if job is None:
-            job = Job.from_template(template)
-            self._cache[template] = job
-        all_kwargs = job.get_defaults()
+        job_obj = self._cache.get(template)
+        if job_obj is None:
+            job_obj = Job.from_template(template)
+            self._cache[template] = job_obj
+        all_kwargs = job_obj.get_defaults()
         all_kwargs.update(kwargs)
-        return Closure(job, [self.clerk, locator, self.script, all_kwargs, self.env])
+        return Closure(job_obj, [self.clerk, locator, self.script, all_kwargs, self.env])
 
 
 job = JobFactory()

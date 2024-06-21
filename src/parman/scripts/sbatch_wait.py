@@ -38,7 +38,7 @@ POLLING_INTERVAL = int(os.getenv("PARMAN_SBATCH_POLLING_INTERVAL", "10"))
 TIME_MARGIN = int(os.getenv("PARMAN_SBATCH_TIME_MARGIN", "5"))
 
 
-def main(path_log=None):
+def main(path_log: str | None = None):
     """Main program."""
     if path_log is None:
         path_log = Path(DEFAULT_FN_LOG)
@@ -46,21 +46,23 @@ def main(path_log=None):
     submit_once_and_wait(path_log, sbatch_args)
 
 
-def submit_once_and_wait(path_log, sbatch_args):
+def submit_once_and_wait(path_log: str, sbatch_args: list[str]):
+    """Submit a job and wait for it to complete. When called a second time, wait with resubmission.
+
+    Parameters
+    ----------
+    path_log
+        A simple log file to keep track of the latest known status of the job.
+        This is read in to avoid submitting a job twice.
+    sbatch_args
+        A list of command-line arguments to pass on to sbatch to submit the job initially.
+    """
     # Read previously logged steps
-    previous_lines = []
     if path_log.is_file():
-        print(f"Reading from {path_log}")
-        with open(path_log) as f:
-            check_log_version(next(f).strip())
-            for line in f:
-                line = line.strip()
-                print("SKIP", line)
-                previous_lines.append(line)
+        previous_lines = _read_log(path_log)
     else:
-        print(f"Creating new {path_log}")
-        with open(path_log, "w") as f:
-            f.write(FIRST_LINE + "\n")
+        previous_lines = []
+        _init_log(path_log)
 
     # Go through or skip steps.
     submit_time, status = read_step(previous_lines)
@@ -84,25 +86,86 @@ def submit_once_and_wait(path_log, sbatch_args):
     # The maximum sleep time between two calls in `sbatch --wait` is 32 seconds.
     # See https://github.com/SchedMD/slurm/blob/master/src/sbatch/sbatch.c
     # Here, we take a random sleep time, by default between 30 and 60 seconds to play nice.
-    last_status = None
-    while True:
-        # First try to replay previously logged steps
-        status_time, status = read_step(previous_lines)
-        if status is None:
-            # All previously logged steps are processed.
-            # Call scontrol and parse its response.
-            rndsleep()
-            status_time, status = get_status(jobid, cluster)
-            if DEBUG:
-                print(f"# {status}")
-            if status is not None and status != last_status:
-                log_step(path_log, status)
-        if (status_time > submit_time + TIME_MARGIN) and (
-            status not in ["PENDING", "CONFIGURING", "RUNNING"]
-        ):
-            return
-        if status is not None:
-            last_status = status
+    status = "UNDEFINED"
+    done = False
+    while not done:
+        status, done = _read_or_poll_status(
+            submit_time, jobid, cluster, previous_lines, path_log, status
+        )
+
+
+def _read_log(path_log: str) -> list[str]:
+    """Read lines from a previously created log file."""
+    print(f"Reading from {path_log}")
+    lines = []
+    with open(path_log) as f:
+        try:
+            check_log_version(next(f).strip())
+        except StopIteration as exc:
+            raise ValueError("Existing log file is empty.") from exc
+        for line in f:
+            line = line.strip()
+            print("SKIP", line)
+            lines.append(line)
+    return lines
+
+
+def _init_log(path_log: str):
+    """Initialize a new log file."""
+    print(f"Creating new {path_log}")
+    with open(path_log, "w") as f:
+        f.write(FIRST_LINE + "\n")
+
+
+def _read_or_poll_status(
+    submit_time: float,
+    jobid: int,
+    cluster: str,
+    previous_lines: list[str],
+    path_log: str,
+    last_status: str,
+) -> tuple[str, bool]:
+    """One polling iteration. Before polling, previous lines from the log are parsed.
+
+    Parameters
+    ----------
+    submit_time
+        The timestamp when the job was submitted.
+    jobid
+        The job of which the status must be polled.
+    cluster
+        The cluster on which the job is submitted.
+    previous_lines
+        Lines from an existing log file to be processed first.
+        (It will be gradually emptied.)
+    path_log
+        The log file to write new polling results to.
+    last_status
+        The status from the previous iteration.
+        If the status does not change, nothing is added to the log file.
+
+    Returns
+    -------
+    status
+        The status result obtained by polling the scheduler.
+    done
+        True when the waiting is over.
+    """
+    # First try to replay previously logged steps
+    status_time, status = read_step(previous_lines)
+    if status is None:
+        # All previously logged steps are processed.
+        # Call scontrol and parse its response.
+        rndsleep()
+        status_time, status = get_status(jobid, cluster)
+        if DEBUG:
+            print(f"# {status}")
+        if status is not None and status != last_status:
+            log_step(path_log, status)
+    done = (status_time > submit_time + TIME_MARGIN) and (
+        status not in ["PENDING", "CONFIGURING", "RUNNING"]
+    )
+    return status, done
 
 
 HELP_MESSAGE = """\
@@ -146,7 +209,7 @@ The polling time can be controlled with two additional environment variables:
   in seconds, default is "5"."""
 
 
-def parse_args(path_log):
+def parse_args(path_log: str) -> list[str]:
     """Parse command-line arguments."""
     args = sys.argv[1:]
     if any(arg in ["-?", "-h", "--help"] for arg in args):
@@ -290,14 +353,16 @@ def cached_run(args: list[str], path_out: Path, cache_timeout) -> str:
         return cache_time, fh.read()
 
 
-def make_cache_header(cache_time, returncode):
+def make_cache_header(cache_time: float, returncode: int):
+    """Prepare a header for the file containing the cached output of a cached execution."""
     iso = datetime.fromtimestamp(cache_time).isoformat()
     if len(iso) != 26:
         raise AssertionError
     return f"v1 datetime={iso} returncode={returncode:+04d}\n"
 
 
-def parse_cache_header(header):
+def parse_cache_header(header: str) -> tuple[float, int]:
+    """Read the header of a cached output and return the timestamp and returncode."""
     if len(header) == 0 or header == "\x00" * CACHE_HEADER_LENGTH:
         return None, None
     if len(header) == CACHE_HEADER_LENGTH:

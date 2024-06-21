@@ -5,6 +5,7 @@ import time
 
 
 def main():
+    """Main program of job."""
     print("loading kwargs file")
     with open("kwargs.json") as f:
         kwargs = json.load(f)

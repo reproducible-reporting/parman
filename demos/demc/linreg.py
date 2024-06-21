@@ -108,6 +108,7 @@ def plot_solutions(fn_png: str, xs: np.ndarray, ev: np.ndarray, solutions: list)
     """
 
     def plot_fits(ax):
+        """Plot the fitted parameters."""
         x_grid = np.linspace(-1, 1, 101)
         for _, pars_mu, _ in solutions:
             y_grid = np.dot(x_grid.reshape(-1, 1) ** np.arange(len(pars_mu)), pars_mu)
@@ -115,18 +116,21 @@ def plot_solutions(fn_png: str, xs: np.ndarray, ev: np.ndarray, solutions: list)
         return x_grid
 
     def plot_curves(ax):
+        """Plot the curves described by the parameters."""
         x_grid = plot_fits(ax)
         ax.plot(x_grid, np.sqrt(1 - x_grid**2), color="k")
         ax.set_xlabel("x")
         ax.set_ylabel("y")
 
     def plot_data(ax):
+        """Plot the expected values."""
         plot_fits(ax)
         ax.plot(xs, ev, marker="+", ls="none", color="k")
         ax.set_xlabel("x")
         ax.set_ylabel("y")
 
     def plot_pars(ax0, ax1):
+        """Plot the parameters as a function of the eigenvalue index."""
         for label, pars_mu, pars_cov in solutions:
             evals = np.linalg.eigvalsh(pars_cov)
             sigmas = np.sqrt(abs(evals))

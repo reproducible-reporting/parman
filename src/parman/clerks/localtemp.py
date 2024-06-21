@@ -44,6 +44,7 @@ class LocalTempClerk(ClerkBase):
 
     @contextmanager
     def workdir(self, locator: Path | str) -> Generator[Path, None, None]:
+        """See Clerckbase.workdir"""
         if self.tmp is not None:
             self.tmp.mkdir(parents=True, exist_ok=True)
         # Not using the TemporaryDirectory, so files are keept when an exception is raised.
@@ -54,18 +55,18 @@ class LocalTempClerk(ClerkBase):
         shutil.rmtree(tmpdir)
 
     def pull(self, global_path: Path | str, locator: Path | str, workdir: Path | str) -> Path:
+        """See Clerckbase.pull"""
         path_src = self.root / global_path
         local_path = Path(os.path.relpath(global_path, locator))
         path_dst = workdir / local_path
-        # print("pull", path_src, path_dst)
         try_copy(path_src, path_dst)
         return local_path
 
     def push(self, local_path: Path | str, locator: Path | str, workdir: Path | str) -> Path:
+        """See Clerckbase.push"""
         path_src = workdir / Path(local_path)
         global_path = locator / Path(local_path)
         path_dst = self.root / global_path
-        # print("push", path_src, path_dst)
         try_copy(path_src, path_dst)
         return global_path
 

@@ -12,11 +12,13 @@ from parman.waitfuture import WaitGraph
 
 
 def func(x, t):
+    """Wait t seconds and return x."""
     time.sleep(t)
     return x
 
 
 def digest_tuple(*args):
+    """Simple function to be passed on to the executor. Returns args as tuple."""
     return tuple(args)
 
 

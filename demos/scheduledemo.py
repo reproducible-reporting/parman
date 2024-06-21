@@ -11,11 +11,13 @@ from parman.scheduler import Scheduler
 
 
 def func(x, t):
+    """Wait t seconds and return x."""
     time.sleep(t)
     return x
 
 
 def add(x1, x2, t):
+    """Wait t seconds and return x1 + x2."""
     time.sleep(t)
     return x1 + x2
 
@@ -23,6 +25,7 @@ def add(x1, x2, t):
 with ThreadPoolExecutor() as pool:
 
     def user_submit(user_function, futures, t):
+        """Function called by the scheduler to submit a user_function to a pool."""
         args = [future.result() for future in futures]
         args.append(t)
         return pool.submit(user_function, *args)
