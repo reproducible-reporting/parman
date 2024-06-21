@@ -21,7 +21,11 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
 ]
-dependencies = ["attrs", "cattrs>=23.1.2"]
+dependencies = [
+    # Ensure changes to these dependencies are reflected in .github/requirements-old.txt
+    "attrs>=23.1.0",
+    "cattrs>=23.1.2"
+]
 dynamic = ["version"]
 
 [project.optional-dependencies]

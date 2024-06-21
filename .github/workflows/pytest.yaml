@@ -1,39 +1,31 @@
 name: pytest
-
 on:
   push:
     branches:
-     - main
+    # Run tests for change on the main branch ...
+    - main
     tags-ignore:
-      - '**'
+    # ... but not for tags (avoids duplicate work).
+    - '**'
   pull_request:
+  # Run tests on pull requests
 
 jobs:
   tests:
-    name: "Python ${{ matrix.py }}"
-    runs-on: "ubuntu-latest"
-
     strategy:
       matrix:
-        py: ["3.10", "3.11"]
-
+        python-version: ["3.10", "3.12"]
+    runs-on: "ubuntu-latest"
     steps:
-      - uses: "actions/checkout@v4"
-      - name: Setup python for test ${{ matrix.py }}
+      - uses: actions/checkout@v4
+      - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.py }}
-      - name: Install dependencies for testing
-        run: |
-          pip install pytest pytest-md pytest-emoji ase parsl
+          python-version: ${{ matrix.python-version }}
+      - name: Install oldest versions of supported dependencies
+        if: ${{ matrix.python-version == '3.10'}}
+        run: pip install -r .github/requirements-old.txt
       - name: Install development version
-        run: |
-          pip install -e .
+        run: pip install -e .[dev]
       - name: Run pytest
-        uses: pavelzw/pytest-action@v2
-        with:
-          verbose: true
-          emoji: true
-          job-summary: true
-          click-to-expand: true
-          report-title: 'Test Report'
+        run: pytest -vv
