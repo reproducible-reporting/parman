@@ -15,6 +15,7 @@ from time import sleep
 
 
 def func(x):
+    """Log x, wait, log x and return x."""
     print(f"  Start func, x = {x}")
     sleep(0.3)
     print(f"  End func, x = {x}")
