@@ -111,3 +111,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Initial public release. See `README.md` for some preliminary details.
 
 This release marks no particular milestone and is just intended to get something out of the door.
+
+
+[Unreleased]: https://github.com/reproducible-reporting/parman
+[0.4.2]: https://github.com/reproducible-reporting/parman/releases/tag/v0.4.2
+[0.4.1]: https://github.com/reproducible-reporting/parman/releases/tag/v0.4.1
+[0.4.0]: https://github.com/reproducible-reporting/parman/releases/tag/v0.4.0
+[0.3.1]: https://github.com/reproducible-reporting/parman/releases/tag/v0.3.1
+[0.2.0]: https://github.com/reproducible-reporting/parman/releases/tag/v0.2.0
+[0.1.0]: https://github.com/reproducible-reporting/parman/releases/tag/v0.1.0
