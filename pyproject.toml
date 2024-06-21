@@ -9,7 +9,7 @@ authors = [
 ]
 description = "Parman extends Python concurrent.futures to facilitate parallel workflows"
 readme = "README.md"
-license = {file = "COPYING"}
+license = {file = "LICENSE.txt"}
 requires-python = ">=3.10"
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -38,8 +38,6 @@ dynamic = ["version"]
 dev = [
     "pytest",
     "pytest-xdist",
-    "pytest-md",
-    "pytest-emoji",
     "ase",
     "parsl",
     "numpy",
