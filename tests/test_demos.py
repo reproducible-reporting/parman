@@ -33,18 +33,19 @@ import os
 import runpy
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
 
 
 def test_linreg(tmp_path: Path):
-    run_script(["python3", "linreg.py"], Path("demos", "demc"), [Path("linreg.py")], tmp_path)
+    run_script([sys.executable, "linreg.py"], Path("demos", "demc"), [Path("linreg.py")], tmp_path)
 
 
 def test_naivemc(tmp_path: Path):
     run_script(
-        ["python3", "naivemc.py", "1000", "10"],
+        [sys.executable, "naivemc.py", "1000", "10"],
         Path("demos", "demc"),
         [Path("linreg.py"), Path("naivemc.py")],
         tmp_path,
@@ -53,7 +54,7 @@ def test_naivemc(tmp_path: Path):
 
 def test_demc_serial(tmp_path: Path):
     run_script(
-        ["python3", "demc.py", "1000", "10"],
+        [sys.executable, "demc.py", "1000", "10"],
         Path("demos", "demc"),
         [Path("linreg.py"), Path("naivemc.py"), Path("demc.py")],
         tmp_path,
@@ -62,7 +63,7 @@ def test_demc_serial(tmp_path: Path):
 
 def test_demc_parman(tmp_path: Path):
     run_script(
-        ["python3", "demc.py", "1000", "10", "--parman"],
+        [sys.executable, "demc.py", "1000", "10", "--parman"],
         Path("demos", "demc"),
         [Path("linreg.py"), Path("naivemc.py"), Path("demc.py")],
         tmp_path,
@@ -90,7 +91,7 @@ def test_demc_parman(tmp_path: Path):
     ],
 )
 def test_jobdemo(framework: str, schedule: bool, in_temp: bool, tmp_path: Path):
-    args = ["python3", "jobdemo.py", framework, "--pause=0"]
+    args = [sys.executable, "jobdemo.py", framework, "--pause=0"]
     if schedule:
         args.append("-s")
     if in_temp:
@@ -134,7 +135,7 @@ def check_hash(expected_sha256, path):
 def test_plastic_ibuprofen(tmp_path: Path):
     run_script(
         [
-            "python3",
+            sys.executable,
             "plastic.py",
             "ibuprofen.xyz",
             "ibuprofen.traj",
@@ -150,7 +151,7 @@ def test_plastic_ibuprofen(tmp_path: Path):
 def test_plastic_alumina(tmp_path: Path):
     run_script(
         [
-            "python3",
+            sys.executable,
             "plastic.py",
             "alumina.json",
             "alumina.traj",
