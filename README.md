@@ -3,6 +3,8 @@
 [![PyPI Version](https://img.shields.io/pypi/v/parman)](https://pypi.org/project/Parman/)
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/parman)
 ![LGPL-3 License](https://img.shields.io/github/license/reproducible-reporting/parman)
+[![CodeFactor](https://www.codefactor.io/repository/github/reproducible-reporting/parman/badge)](https://www.codefactor.io/repository/github/reproducible-reporting/parman)
+[![DeepSource](https://app.deepsource.com/gh/reproducible-reporting/parman.svg/?label=active+issues&show_trend=true&token=eN22Gnf13peqRJe8V7IAVKsg)](https://app.deepsource.com/gh/reproducible-reporting/parman/)
 
 # Parman
 
