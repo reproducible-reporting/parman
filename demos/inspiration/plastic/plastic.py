@@ -72,7 +72,6 @@ Badger's rule:
 
 """
 
-
 import argparse
 
 import ase.data

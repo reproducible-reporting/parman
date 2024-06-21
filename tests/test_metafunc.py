@@ -19,7 +19,6 @@
 # --
 """Unit tests for parman.metafunc."""
 
-
 import inspect
 
 from parman.metafunc import MinimalMetaFunc

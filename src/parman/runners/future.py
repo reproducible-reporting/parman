@@ -105,7 +105,7 @@ def _wait_for_data(data: Any) -> Any:
     )
 
 
-class FutureNotDone(RuntimeError):
+class FutureNotDoneError(RuntimeError):
     pass
 
 
@@ -113,7 +113,7 @@ def _validate_done(needed_for: str, data: Any) -> Any:
     """Validate that all futures (nested recursively) are done."""
     for mulidx, leaf in iterate_tree(data):
         if isinstance(leaf, Future) and not leaf.done():
-            raise FutureNotDone(
+            raise FutureNotDoneError(
                 f"Trying to get an unavailable result for argument {mulidx} of {needed_for}."
             )
 

@@ -115,7 +115,7 @@ def test_optional(tmp_path: Path):
 
 
 @pytest.mark.parametrize(
-    "inp, out",
+    ("inp", "out"),
     [
         ("  aaa bbb \n", "aaa bbb"),
         ("  aaa # bbb \n", "aaa"),

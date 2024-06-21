@@ -166,7 +166,7 @@ class Job(MetaFuncBase):
         """
         return locator
 
-    def __call__(  # noqa: PLR0915
+    def __call__(
         self,
         clerk: ClerkBase,
         locator: str | Path,

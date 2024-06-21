@@ -19,13 +19,12 @@
 # --
 """Unit tests for parman.treeleaf."""
 
-
 import pytest
 from parman.treeleaf import get_tree, iterate_tree, same, transform_tree
 
 
 @pytest.mark.parametrize(
-    "tree, mulidx, value",
+    ("tree", "mulidx", "value"),
     [
         ("aaa", (), "aaa"),
         (1, (), 1),
@@ -44,7 +43,7 @@ def test_get_tree(tree, mulidx, value):
 
 
 @pytest.mark.parametrize(
-    "tree, items",
+    ("tree", "items"),
     [
         ("aaa", [((), "aaa")]),
         ([3, "b"], [((0,), 3), ((1,), "b")]),
@@ -59,7 +58,7 @@ def test_iterate_tree_single(tree, items):
 
 
 @pytest.mark.parametrize(
-    "trees, items",
+    ("trees", "items"),
     [
         (["aaa", "bbb", [4, 3]], [((), ("aaa", "bbb", [4, 3]))]),
         ([[2, 1], [4, 3]], [((0,), (2, 4)), ((1,), (1, 3))]),
@@ -92,7 +91,7 @@ def test_iterate_tree_multiple(trees, items):
 
 
 @pytest.mark.parametrize(
-    "intrees, outtree",
+    ("intrees", "outtree"),
     [
         ([1], "()1"),
         ([1, 2], "()12"),

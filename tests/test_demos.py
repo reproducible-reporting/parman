@@ -28,7 +28,6 @@ If the files in the jobdemo are updated, refresh the hashes as follows:
 )
 """
 
-
 import hashlib
 import os
 import runpy
@@ -71,7 +70,7 @@ def test_demc_parman(tmp_path: Path):
 
 
 @pytest.mark.parametrize(
-    "framework, schedule, in_temp",
+    ("framework", "schedule", "in_temp"),
     [
         ("dry", False, False),
         ("serial", False, False),

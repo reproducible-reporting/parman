@@ -26,7 +26,6 @@ as a base class.
 As a result, also ScheduledFuture instances can also be used as dependencies.
 """
 
-
 import weakref
 from collections.abc import Callable, Collection, Mapping
 from concurrent.futures import Future

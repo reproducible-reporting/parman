@@ -20,7 +20,6 @@
 # --
 """Definition and standard solution of an ill-conditioned linear regression"""
 
-
 import matplotlib.pyplot as plt
 import numpy as np
 

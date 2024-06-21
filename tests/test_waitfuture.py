@@ -40,7 +40,7 @@ def func(x, t):
 
 def error_func(x, t):
     sleep(t)
-    raise ValueError()
+    raise ValueError
 
 
 def digest_tuple(*args):
@@ -166,10 +166,10 @@ def test_after_after(pool):
 
 @pytest.mark.parametrize("seed", range(3))
 @pytest.mark.parametrize("max_workers", [15, 45, 150])
-@pytest.mark.parametrize("Executor", [ThreadPoolExecutor, ProcessPoolExecutor])
+@pytest.mark.parametrize("executor_class", [ThreadPoolExecutor, ProcessPoolExecutor])
 @pytest.mark.parametrize("size", [10, 30, 100])
 @pytest.mark.parametrize("end", ["normal", "reverse", "wait", "as_completed"])
-def test_larger(seed, max_workers, Executor, size, end):
+def test_larger(seed, max_workers, executor_class, size, end):
     """Test designed to trigger potential race conditions."""
 
     def digest(*args):
@@ -177,7 +177,7 @@ def test_larger(seed, max_workers, Executor, size, end):
 
     random.seed(seed)
     wait_graph = WaitGraph()
-    with Executor(max_workers) as pool:
+    with executor_class(max_workers) as pool:
         futures = [pool.submit(func, i, random.uniform(0.001, 0.010)) for i in range(size)]
         expected = [2 * i for i in range(size)]
         for _i in range(size):

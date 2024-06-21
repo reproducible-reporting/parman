@@ -83,13 +83,13 @@ def setup_runner(framework, schedule):
     """Setup a Runner instances."""
     if framework == "dry":
         return DryRunner()
-    elif framework == "serial":
+    if framework == "serial":
         return SerialRunner()
-    elif framework == "threads":
+    if framework == "threads":
         return ConcurrentRunner(schedule=schedule)
-    elif framework == "processes":
+    if framework == "processes":
         return ConcurrentRunner(schedule=schedule, executor=ProcessPoolExecutor(max_workers=8))
-    elif framework == "parsl-local":
+    if framework == "parsl-local":
         config = parsl.config.Config(
             executors=[
                 parsl.executors.HighThroughputExecutor(
@@ -104,7 +104,7 @@ def setup_runner(framework, schedule):
             strategy="none",
         )
         return ParslRunner(schedule=schedule, dfk=parsl.load(config))
-    elif framework == "parsl-slurm":
+    if framework == "parsl-slurm":
         config = parsl.config.Config(
             executors=[
                 parsl.executors.HighThroughputExecutor(
@@ -128,8 +128,7 @@ def setup_runner(framework, schedule):
             strategy="none",
         )
         return ParslRunner(schedule=schedule, dfk=parsl.load(config))
-    else:
-        raise ValueError("invalid framework")
+    raise ValueError("invalid framework")
 
 
 def workflow(runner, pause):

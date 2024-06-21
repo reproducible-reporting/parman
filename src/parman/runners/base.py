@@ -38,4 +38,3 @@ class RunnerBase:
 
     def shutdown(self):
         """Wait until all jobs have completed."""
-        pass

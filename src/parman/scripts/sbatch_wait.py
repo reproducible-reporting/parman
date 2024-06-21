@@ -159,7 +159,7 @@ def check_log_version(line: str):
     """Validate the log version, abort if there is a mismatch."""
     if line != FIRST_LINE:
         raise ValueError(
-            "The first line of the log is wrong. " f"Expected: '{FIRST_LINE}' " f"Found: '{line}'"
+            f"The first line of the log is wrong. Expected: '{FIRST_LINE}' Found: '{line}'"
         )
 
 
@@ -176,10 +176,7 @@ def read_step(lines: list[str]) -> str | None:
 
 def rndsleep():
     """Randomized sleep to distribute I/O load evenly."""
-    if DEBUG:
-        sleep_seconds = 1
-    else:
-        sleep_seconds = random.randint(POLLING_INTERVAL, POLLING_INTERVAL + TIME_MARGIN)
+    sleep_seconds = 1 if DEBUG else random.randint(POLLING_INTERVAL, POLLING_INTERVAL + TIME_MARGIN)
     time.sleep(sleep_seconds)
 
 
@@ -295,21 +292,21 @@ def cached_run(args: list[str], path_out: Path, cache_timeout) -> str:
 
 def make_cache_header(cache_time, returncode):
     iso = datetime.fromtimestamp(cache_time).isoformat()
-    assert len(iso) == 26
+    if len(iso) != 26:
+        raise AssertionError
     return f"v1 datetime={iso} returncode={returncode:+04d}\n"
 
 
 def parse_cache_header(header):
     if len(header) == 0 or header == "\x00" * CACHE_HEADER_LENGTH:
         return None, None
-    elif len(header) == CACHE_HEADER_LENGTH:
+    if len(header) == CACHE_HEADER_LENGTH:
         if not header.startswith("v1 datetime="):
             raise ValueError("Invalid header")
         cache_time = datetime.fromisoformat(header[12:38]).timestamp()
         returncode = int(header[50:54])
         return cache_time, returncode
-    else:
-        raise ValueError(f"Cannot parse cache header: {header}")
+    raise ValueError(f"Cannot parse cache header: {header}")
 
 
 CACHE_HEADER_LENGTH = len(make_cache_header(time.time(), 0))

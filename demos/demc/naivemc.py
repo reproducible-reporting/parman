@@ -20,7 +20,6 @@
 # --
 """Naive Monte Carlo solver for the ill-conditioned regression problem."""
 
-
 import argparse
 from collections.abc import Callable
 
@@ -60,8 +59,7 @@ def parse_args():
     parser.add_argument(
         "burnin", default=500, type=int, help="Number of recorded iterations to discard."
     )
-    args = parser.parse_args()
-    return args
+    return parser.parse_args()
 
 
 def naivemc(maxeval: int, burnin: int):

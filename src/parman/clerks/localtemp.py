@@ -23,7 +23,7 @@ import os
 import shutil
 import tempfile
 from collections.abc import Generator
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from pathlib import Path
 
 import attrs
@@ -73,12 +73,8 @@ class LocalTempClerk(ClerkBase):
 def try_copy(path_src: Path, path_dst: Path):
     """Try to copy something or fail silently."""
     path_dst.parent.mkdir(parents=True, exist_ok=True)
-    try:
+    with suppress(OSError):
         shutil.copytree(path_src, path_dst)
         return
-    except OSError:
-        pass
-    try:
+    with suppress(OSError):
         shutil.copy(path_src, path_dst)
-    except OSError:
-        pass

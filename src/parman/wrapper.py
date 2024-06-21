@@ -19,7 +19,6 @@
 # --
 """A simple wrapper for convenient parallelization of serial scripts."""
 
-
 from functools import wraps
 
 from .closure import Closure

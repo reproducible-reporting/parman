@@ -32,7 +32,6 @@ The functions below treat leafs (including tuples) as opaque objects that cannot
 be recursed into.
 """
 
-
 from collections.abc import Callable, Generator, Iterator
 from typing import Any
 
@@ -94,7 +93,7 @@ def iterate_tree(*trees: Any) -> Generator[tuple[tuple, Any], None, None]:
                     yield (intidx, *subidx), subtrees
             handled = True
         elif isinstance(trees[0], dict) and same(set(tree.keys()) for tree in trees):
-            for keyidx in trees[0].keys():
+            for keyidx in trees[0]:
                 items = [tree[keyidx] for tree in trees]
                 for subidx, subtrees in iterate_tree(*items):
                     yield (keyidx, *subidx), subtrees
@@ -135,9 +134,9 @@ def transform_tree(transform: Callable, *trees: Any, _mulidx: tuple = ()) -> Any
             for intidx, items in enumerate(zip(*trees, strict=True)):
                 result.append(transform_tree(transform, *items, _mulidx=(*_mulidx, intidx)))
             return result
-        if isinstance(trees[0], dict) and same(set(tree.keys()) for tree in trees):
+        if isinstance(trees[0], dict) and same(set(tree) for tree in trees):
             result = {}
-            for keyidx in trees[0].keys():
+            for keyidx in trees[0]:
                 items = [tree[keyidx] for tree in trees]
                 result[keyidx] = transform_tree(transform, *items, _mulidx=(*_mulidx, keyidx))
             return result

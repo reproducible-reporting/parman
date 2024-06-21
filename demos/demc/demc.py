@@ -58,8 +58,7 @@ def parse_args():
         "burnin", default=500, type=int, help="Number of recorded iterations to discard."
     )
     parser.add_argument("-p", "--parman", default=False, action="store_true")
-    args = parser.parse_args()
-    return args
+    return parser.parse_args()
 
 
 def demc(use_parman: bool, maxeval: int, burnin: int):

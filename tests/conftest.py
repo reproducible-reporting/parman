@@ -27,14 +27,14 @@ import pytest
 @pytest.fixture(params=[ProcessPoolExecutor, ThreadPoolExecutor])
 def pool(request):
     """Default executor from concurrent.futures."""
-    PoolExecutor = request.param
-    with PoolExecutor() as pool:
+    pool_executor_class = request.param
+    with pool_executor_class() as pool:
         yield pool
 
 
 @pytest.fixture(params=[ProcessPoolExecutor, ThreadPoolExecutor])
 def pool1(request):
     """Single-worker executor from concurrent.futures."""
-    PoolExecutor = request.param
-    with PoolExecutor(max_workers=1) as pool:
+    pool_executor_class = request.param
+    with pool_executor_class(max_workers=1) as pool:
         yield pool
