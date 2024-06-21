@@ -47,12 +47,18 @@ class LocalClerk(ClerkBase):
     def pull(self, global_path: Path | str, locator: Path | str, workdir: Path | str) -> Path:
         """See Clerckbase.pull"""
         if workdir != self.root / locator:
-            raise RuntimeError("Internal inconsistency in LocalClerck.pull")
+            raise RuntimeError(
+                "Internal inconsistency in LocalClerck.pull: "
+                f"workdir={workdir}, expected={self.root / locator}"
+            )
         # pathlib is still work in progress, so it seems. :(
         return Path(os.path.relpath(global_path, locator))
 
     def push(self, local_path: Path | str, locator: Path | str, workdir: Path | str) -> Path:
         """See Clerckbase.push"""
         if workdir != self.root / locator:
-            raise RuntimeError("Internal inconsistency in LocalClerck.push")
+            raise RuntimeError(
+                "Internal inconsistency in LocalClerck.push: "
+                f"workdir={workdir}, expected={self.root / locator}"
+            )
         return Path(locator) / local_path
