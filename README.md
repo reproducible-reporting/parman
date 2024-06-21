@@ -1,5 +1,5 @@
 [![pytest](https://github.com/reproducible-reporting/parman/actions/workflows/pytest.yaml/badge.svg)](https://github.com/reproducible-reporting/parman/actions/workflows/pytest.yaml)
-[![PyPI Upload](https://github.com/reproducible-reporting/parman/actions/workflows/pypi.yaml/badge.svg)](https://github.com/reproducible-reporting/parman/actions/workflows/pypi.yaml)
+[![release](https://github.com/reproducible-reporting/parman/actions/workflows/release.yaml/badge.svg)](https://github.com/reproducible-reporting/parman/actions/workflows/release.yaml)
 [![PyPI Version](https://img.shields.io/pypi/v/parman)](https://pypi.org/project/Parman/)
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/parman)
 ![LGPL-3 License](https://img.shields.io/github/license/reproducible-reporting/parman)
