@@ -7,10 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.3] - 2024-06-21
+
 ### Fixed
 
 - Fix version info.
 - Fixed readability of JSON files: indent with two spaces
+- Many small cleanups
 
 
 ## [0.4.2] - 2023-10-27
@@ -114,6 +117,7 @@ This release marks no particular milestone and is just intended to get something
 
 
 [Unreleased]: https://github.com/reproducible-reporting/parman
+[0.4.3]: https://github.com/reproducible-reporting/parman/releases/tag/v0.4.3
 [0.4.2]: https://github.com/reproducible-reporting/parman/releases/tag/v0.4.2
 [0.4.1]: https://github.com/reproducible-reporting/parman/releases/tag/v0.4.1
 [0.4.0]: https://github.com/reproducible-reporting/parman/releases/tag/v0.4.0
