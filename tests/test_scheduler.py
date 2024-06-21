@@ -161,4 +161,3 @@ def test_larger(seed, max_workers, executor_class, size, end):
             assert end == "normal"
         for future, result in pairs:
             assert future.result(timeout=5) == result
-    del scheduler

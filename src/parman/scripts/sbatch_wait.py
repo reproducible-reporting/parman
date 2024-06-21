@@ -38,7 +38,7 @@ POLLING_INTERVAL = int(os.getenv("PARMAN_SBATCH_POLLING_INTERVAL", "10"))
 TIME_MARGIN = int(os.getenv("PARMAN_SBATCH_TIME_MARGIN", "5"))
 
 
-def main(path_log=None):
+def main(path_log: str | None = None):
     """Main program."""
     if path_log is None:
         path_log = Path(DEFAULT_FN_LOG)
@@ -46,13 +46,27 @@ def main(path_log=None):
     submit_once_and_wait(path_log, sbatch_args)
 
 
-def submit_once_and_wait(path_log, sbatch_args):
+def submit_once_and_wait(path_log: str, sbatch_args: list[str]):
+    """Submit a job and wait for it to complete. When called a second time, wait with resubmission.
+
+    Parameters
+    ----------
+    path_log
+        A simple log file to keep track of the latest known status of the job.
+        This is read in to avoid submitting a job twice.
+    sbatch_args
+        A list of command-line arguments to pass on to sbatch to submit the job initially.
+    """
+
     # Read previously logged steps
     previous_lines = []
     if path_log.is_file():
         print(f"Reading from {path_log}")
         with open(path_log) as f:
-            check_log_version(next(f).strip())
+            try:
+                check_log_version(next(f).strip())
+            except StopIteration as exc:
+                raise ValueError("Existing log file is empty.") from exc
             for line in f:
                 line = line.strip()
                 print("SKIP", line)
@@ -146,7 +160,7 @@ The polling time can be controlled with two additional environment variables:
   in seconds, default is "5"."""
 
 
-def parse_args(path_log):
+def parse_args(path_log: str) -> list[str]:
     """Parse command-line arguments."""
     args = sys.argv[1:]
     if any(arg in ["-?", "-h", "--help"] for arg in args):
@@ -290,14 +304,16 @@ def cached_run(args: list[str], path_out: Path, cache_timeout) -> str:
         return cache_time, fh.read()
 
 
-def make_cache_header(cache_time, returncode):
+def make_cache_header(cache_time: float, returncode: int):
+    """Prepare a header for the file containing the cached output of a cached execution."""
     iso = datetime.fromtimestamp(cache_time).isoformat()
     if len(iso) != 26:
         raise AssertionError
     return f"v1 datetime={iso} returncode={returncode:+04d}\n"
 
 
-def parse_cache_header(header):
+def parse_cache_header(header: str) -> tuple[float, int]:
+    """Read the header of a cached output and return the timestamp and returncode."""
     if len(header) == 0 or header == "\x00" * CACHE_HEADER_LENGTH:
         return None, None
     if len(header) == CACHE_HEADER_LENGTH:

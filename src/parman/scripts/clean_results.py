@@ -25,6 +25,7 @@ from pathlib import Path
 
 
 def main():
+    """Main program."""
     args = parse_args()
     root = Path(args.results)
     to_remove = []
@@ -40,6 +41,7 @@ def main():
 
 
 def parse_args():
+    """Parse command-line arguments."""
     parser = argparse.ArgumentParser(
         prog="parman-clean-results",
         description="Remove results directories lacking a result.json file.",

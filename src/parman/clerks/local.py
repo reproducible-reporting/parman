@@ -39,15 +39,20 @@ class LocalClerk(ClerkBase):
 
     @contextmanager
     def workdir(self, locator: Path | str) -> Generator[Path, None, None]:
+        """See Clerckbase.workdir"""
         workdir = self.root / locator
         workdir.mkdir(parents=True, exist_ok=True)
         yield workdir
 
     def pull(self, global_path: Path | str, locator: Path | str, workdir: Path | str) -> Path:
-        assert workdir == self.root / locator
+        """See Clerckbase.pull"""
+        if workdir != self.root / locator:
+            raise RuntimeError("Internal inconsistency in LocalClerck.pull")
         # pathlib is still work in progress, so it seems. :(
         return Path(os.path.relpath(global_path, locator))
 
     def push(self, local_path: Path | str, locator: Path | str, workdir: Path | str) -> Path:
-        assert workdir == self.root / locator
+        """See Clerckbase.push"""
+        if workdir != self.root / locator:
+            raise RuntimeError("Internal inconsistency in LocalClerck.push")
         return Path(locator) / local_path

@@ -196,6 +196,7 @@ class Scheduler:
         self._submit_thread.join()
 
     def _check_stop_submit_loop(self):
+        """Check for shutdown and stop the submit_loop if appropriate."""
         # If there is nothing scheduled for submission to the executor,
         # the submit_loop can be instructed to stop.
         with self._lock:
@@ -203,6 +204,7 @@ class Scheduler:
                 self._todo_queue.put(None)
 
     def _handle_wait_done(self, wait_future: WaitFuture):
+        """Handle a completed wait_future: submit the corresponding scheduled_future."""
         with self._lock:
             scheduled_future = self._wait_map.pop(wait_future, None)
             del self._back_map[scheduled_future]
@@ -217,6 +219,7 @@ class Scheduler:
         self._check_stop_submit_loop()
 
     def _handle_work_done(self, work_future: Future):
+        """Handle a completed work_future: assign result to the corresponding scheduled_future."""
         with self._lock:
             scheduled_future = self._work_map.pop(work_future, None)
             del self._back_map[scheduled_future]
@@ -230,7 +233,7 @@ class Scheduler:
                 scheduled_future.set_exception(exc)
 
     def _handle_scheduled_done(self, scheduled_future: ScheduledFuture):
-        # This is only useful when the user cancelled a scheduled_future.
+        """Handle a completed scheduled_future, only relevant when cancelled by the user."""
         if scheduled_future.cancelled():
             with self._lock:
                 other_future = self._back_map.pop(scheduled_future, None)

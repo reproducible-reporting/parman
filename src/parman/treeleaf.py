@@ -32,7 +32,7 @@ The functions below treat leafs (including tuples) as opaque objects that cannot
 be recursed into.
 """
 
-from collections.abc import Callable, Generator, Iterator
+from collections.abc import Callable, Generator, Iterable
 from typing import Any
 
 __all__ = ("get_tree", "iterate_tree", "transform_tree", "same")
@@ -60,10 +60,13 @@ def get_tree(tree: Any, mulidx: tuple) -> Any:
     return None
 
 
-def same(items: Iterator) -> bool:
+def same(items: Iterable) -> bool:
     """Return True only if all items are equal."""
     iitems = iter(items)
-    first = next(iitems)
+    try:
+        first = next(iitems)
+    except StopIteration as exc:
+        raise ValueError("Iterator passed to same function has no items.") from exc
     return all(first == item for item in iitems)
 
 

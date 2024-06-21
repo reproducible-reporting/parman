@@ -47,6 +47,7 @@ class ParslRunner(FutureRunnerBase):
             self.dfk = DataFlowKernelLoader.load()
 
     def _submit(self, closure: Closure) -> Future:
+        """Submit a closure to the executor."""
         closure = self._unpack_data(closure)
         executors = closure.get_resources().get("parsl_executors", "all")
         print(f"Submitting {closure.describe()}")

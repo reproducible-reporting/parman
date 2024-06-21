@@ -106,7 +106,7 @@ def _wait_for_data(data: Any) -> Any:
 
 
 class FutureNotDoneError(RuntimeError):
-    pass
+    """Raised when results from futures are needed while they are not available yet."""
 
 
 def _validate_done(needed_for: str, data: Any) -> Any:

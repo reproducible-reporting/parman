@@ -120,3 +120,6 @@ def test_same():
     assert not same((1, 1, 2))
     assert same(item for item in [1, 1, 1])
     assert not same(item for item in [1, 1, 2])
+    with pytest.raises(ValueError):
+        same([])
+    assert same([1])
