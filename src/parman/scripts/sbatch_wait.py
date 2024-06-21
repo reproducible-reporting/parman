@@ -57,7 +57,6 @@ def submit_once_and_wait(path_log: str, sbatch_args: list[str]):
     sbatch_args
         A list of command-line arguments to pass on to sbatch to submit the job initially.
     """
-
     # Read previously logged steps
     previous_lines = []
     if path_log.is_file():
