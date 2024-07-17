@@ -39,5 +39,5 @@ def test_basics():
     assert metafunc.get_signature() == inspect.signature(compute_sum)
     assert metafunc.get_parameters_api() == {"first": int, "second": int}
     assert metafunc.get_result_mock(1, 3) == 42
-    assert metafunc.get_result_api(1, 3) == int
+    assert metafunc.get_result_api(1, 3) is int
     assert metafunc.get_resources() == {}
