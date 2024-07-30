@@ -56,7 +56,7 @@ parman-clean-results = "parman.scripts.clean_results:main"
 [tool.pytest.ini_options]
 minversion = "7.0"
 testpaths = ["tests"]
-addopts = "-vv -n auto"
+addopts = "-vv -n auto -W error"
 
 [tool.ruff]
 line-length = 100
