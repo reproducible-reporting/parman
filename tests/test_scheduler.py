@@ -25,6 +25,7 @@ from functools import partial
 from time import sleep
 
 import pytest
+
 from parman.scheduler import Scheduler
 
 

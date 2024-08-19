@@ -22,6 +22,7 @@
 import time
 
 import pytest
+
 from parman.scripts.sbatch_wait import (
     cached_run,
     make_cache_header,
