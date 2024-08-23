@@ -24,6 +24,7 @@ import stat
 from pathlib import Path
 
 import pytest
+
 from parman.job import JobFactory, strip_line, write_sh_env
 
 

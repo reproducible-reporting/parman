@@ -33,6 +33,7 @@ import linreg
 import naivemc
 import numpy as np
 from numpy.typing import NDArray
+
 from parman.runners.concurrent import ConcurrentRunner
 from parman.wrapper import wrap
 

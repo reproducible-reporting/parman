@@ -30,6 +30,7 @@ from concurrent.futures import (
 from time import sleep
 
 import pytest
+
 from parman.waitfuture import WaitGraph
 
 
