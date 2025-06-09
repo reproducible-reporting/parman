@@ -52,10 +52,10 @@ from .treeleaf import iterate_tree, transform_tree
 
 __all__ = (
     "MetaFuncBase",
-    "validate",
-    "type_api_from_signature",
-    "type_api_from_mock",
     "MinimalMetaFunc",
+    "type_api_from_mock",
+    "type_api_from_signature",
+    "validate",
 )
 
 

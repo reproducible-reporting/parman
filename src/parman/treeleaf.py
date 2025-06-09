@@ -35,7 +35,7 @@ be recursed into.
 from collections.abc import Callable, Generator, Iterable
 from typing import Any
 
-__all__ = ("get_tree", "iterate_tree", "transform_tree", "same")
+__all__ = ("get_tree", "iterate_tree", "same", "transform_tree")
 
 
 def get_tree(tree: Any, mulidx: tuple) -> Any:

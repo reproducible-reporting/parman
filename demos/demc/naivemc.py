@@ -29,7 +29,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from numpy.typing import NDArray
 
-__all__ = ("LogPosterior", "plot_traj", "analyse_traj")
+__all__ = ("LogPosterior", "analyse_traj", "plot_traj")
 
 
 @attrs.define
