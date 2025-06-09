@@ -23,7 +23,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-__all__ = ("define_problem", "solve_regression", "plot_solutions")
+__all__ = ("define_problem", "plot_solutions", "solve_regression")
 
 
 def main():
