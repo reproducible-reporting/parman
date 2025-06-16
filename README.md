@@ -8,7 +8,15 @@
 
 # Parman
 
-At this stage, Parman is an experimental project, so expect a rocky road ahead.
+---
+
+This repository has been archived.
+Most of Parman's functionality has been implemented in
+[StepUp Core](https://reproducible-reporting.github.io/stepup-core) and
+[StepUp Queue](https://reproducible-reporting.github.io/stepup-queue).
+No further development will take place here.
+
+---
 
 The goal of Parman is to extend `concurrent.futures` (and compatible implementations)
 with features that facilitate a transparent implementation of workflows.
